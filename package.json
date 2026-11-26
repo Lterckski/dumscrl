@@ -1,0 +1,27 @@
+{
+  "name": "dumscrl",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
+    "expo": "~58.0.26",
+    "expo-haptics": "~58.0.8",
+    "expo-status-bar": "~58.0.5",
+    "expo-system-ui": "~58.0.7",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-safe-area-context": "~5.11.1"
+  },
+  "devDependencies": {
+    "@types/react": "~19.3.0",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "prebuild": "expo prebuild -p android --clean && cp ~/.android/debug.keystore android/app/debug.keystore",
+    "build:apk": "cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a",
+    "test:engine": "cd android && ./gradlew :dumscrl-engine:testDebugUnitTest",
+    "typecheck": "tsc --noEmit"
+  },
+  "private": true
+}

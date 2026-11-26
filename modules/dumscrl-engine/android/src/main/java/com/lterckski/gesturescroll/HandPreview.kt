@@ -7,7 +7,7 @@ import android.graphics.Paint
 import android.view.View
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarker
 
-/** Draws the tracked hand over a FIT_CENTER, mirrored PreviewView of the same 4:3 camera. */
+/** Draws the tracked hand over a FILL_CENTER, mirrored PreviewView of the same 4:3 camera. */
 class HandPreview(context: Context) : View(context) {
     private var frameW = 0
     private var frameH = 0
@@ -21,7 +21,7 @@ class HandPreview(context: Context) : View(context) {
 
     override fun onDraw(canvas: Canvas) {
         val p = points ?: return
-        val scale = minOf(width / frameW.toFloat(), height / frameH.toFloat())
+        val scale = maxOf(width / frameW.toFloat(), height / frameH.toFloat()) // matches PreviewView FILL_CENTER
         canvas.save()
         canvas.translate((width + frameW * scale) / 2, (height - frameH * scale) / 2)
         canvas.scale(-scale, scale) // the front preview is mirrored like a selfie

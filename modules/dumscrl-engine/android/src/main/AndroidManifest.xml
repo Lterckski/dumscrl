@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-    <!-- Apps that tilt/swipe left/right cycle between. -->
+    <!-- Apps that next/previous app cycles between. -->
     <queries>
         <package android:name="com.facebook.katana" />
         <package android:name="com.instagram.android" />
@@ -14,21 +14,13 @@
         <package android:name="com.ss.android.ugc.trill" />
     </queries>
 
-    <application
-        android:label="dumscrl"
-        android:theme="@android:style/Theme.Material.NoActionBar">
-        <activity android:name=".MainActivity" android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+    <application>
         <service
-            android:name=".GestureService"
+            android:name="com.lterckski.gesturescroll.GestureService"
             android:exported="false"
             android:foregroundServiceType="camera" />
         <service
-            android:name=".GestureAccessibilityService"
+            android:name="com.lterckski.gesturescroll.GestureAccessibilityService"
             android:exported="false"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>

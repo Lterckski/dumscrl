@@ -37,8 +37,17 @@ class GestureService : LifecycleService() {
     companion object {
         @Volatile var status = "Stopped"
             private set
-        /** Set by the visible activity; called on the main thread. */
+        /** Status and gesture labels, on the main thread. */
         var listener: ((String) -> Unit)? = null
+        /** The sign currently seen ("point", "fist", "no hand"…) and whether paused; on the main thread, on change only. */
+        var signListener: ((String, Boolean) -> Unit)? = null
+        val running get() = instance != null
+        val isPaused get() = instance?.paused ?: false
+        /** Main thread. */
+        fun setPaused(p: Boolean) {
+            val s = instance ?: return
+            if (s.paused != p) { s.paused = p; s.publish(if (p) "Paused" else "Resumed") }
+        }
         /** Set by the visible activity: each frame, its hand points (x0,y0,x1,y1… in frame pixels) and live numbers. */
         var previewListener: ((Int, Int, FloatArray?, String) -> Unit)? = null
         @Volatile private var instance: GestureService? = null
@@ -57,7 +66,9 @@ class GestureService : LifecycleService() {
     private val handDetector by lazy { HandDetector(swipes = mode == "flicks") }
     private var faces: FaceLandmarker? = null
     private var hands: HandLandmarker? = null
-    private var paused = false
+    @Volatile private var paused = false
+    private var lastSign = ""
+    private var lastSignPaused = false
     // Once-a-second tuning log: adb logcat -s GestureScroll
     private var frames = 0
     private var logAt = 0L
@@ -139,6 +150,12 @@ class GestureService : LifecycleService() {
             val info = lastHand + (if (mode == "flicks") "\nswipe travel ${"%.2f".format(handDetector.travel)} of ${handDetector.minTravelPalms} palms" else "") +
                 if (paused) "\nPAUSED" else ""
             mainExecutor.execute { previewListener?.invoke(w.toInt(), h.toInt(), pts, info) }
+        }
+        val sign = lastHand.substringAfter("hand: ", "no hand").substringBefore(" (")
+        if (sign != lastSign || paused != lastSignPaused) {
+            lastSign = sign; lastSignPaused = paused
+            val p = paused
+            mainExecutor.execute { signListener?.invoke(sign, p) }
         }
         frames++
         if (t - logAt >= 1000) {
@@ -224,7 +241,7 @@ class GestureService : LifecycleService() {
             .setContentText(text)
             .setOngoing(true)
             .setContentIntent(
-                PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+                PendingIntent.getActivity(this, 0, packageManager.getLaunchIntentForPackage(packageName), PendingIntent.FLAG_IMMUTABLE)
             )
             .build()
 

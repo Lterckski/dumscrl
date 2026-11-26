@@ -1,0 +1,3 @@
+<resources>
+    <string name="accessibility_description">Lets dumscrl scroll, like and switch apps when you show hand signs to the front camera. It reads the on-screen layout only to find photo carousels to scroll; nothing is stored or sent anywhere.</string>
+</resources>

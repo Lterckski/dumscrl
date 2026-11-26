@@ -33,8 +33,17 @@ class DumscrlEngineModule : Module() {
     }
 
     // Camera permission must be granted first (asked from JavaScript).
-    Function("start") { context.startForegroundService(Intent(context, GestureService::class.java)); Unit }
-    Function("stop") { context.stopService(Intent(context, GestureService::class.java)); Unit }
+    Function("start") {
+      GestureService.stopRequested = false
+      context.startForegroundService(Intent(context, GestureService::class.java)); Unit
+    }
+    // On while the Camera tab is open: signs are read and shown, but nothing is performed on the phone.
+    Function("setPractice") { on: Boolean -> GestureService.practice = on }
+    // A service that hasn't reached onCreate yet stops itself there instead.
+    Function("stop") {
+      if (GestureService.running) context.stopService(Intent(context, GestureService::class.java)) else GestureService.stopRequested = true
+      Unit
+    }
     Function("isRunning") { GestureService.running }
     Function("status") { GestureService.status }
 

@@ -42,6 +42,10 @@ class GestureService : LifecycleService() {
         /** The sign currently seen ("point", "fist", "no hand"…) and whether paused; on the main thread, on change only. */
         var signListener: ((String, Boolean) -> Unit)? = null
         val running get() = instance != null
+        /** Practice (the Camera tab is open): signs are read and shown, but nothing happens on the phone. */
+        @Volatile var practice = false
+        /** Stop asked for before onCreate ran; stopping then would crash (startForeground never called). */
+        @Volatile var stopRequested = false
         val isPaused get() = instance?.paused ?: false
         /** Main thread. */
         fun setPaused(p: Boolean) {
@@ -84,10 +88,10 @@ class GestureService : LifecycleService() {
             NotificationChannel(CHANNEL, "Gesture detector", NotificationManager.IMPORTANCE_LOW)
         )
         startForeground(NOTIF_ID, notification("Watching for gestures"), ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA)
-        publish("Watching for gestures")
-
         mode = mode(this)
-        instance = this
+        instance = this // before publishing, so the app reads running = true
+        publish("Watching for gestures")
+        if (stopRequested) { stopSelf(); return }
         analysisThread.execute {
             if (mode != "head") hands = try { handLandmarker(Delegate.GPU) } catch (e: Exception) {
                 Log.w("GestureScroll", "GPU hand tracking unavailable, using CPU", e); handLandmarker(Delegate.CPU)
@@ -190,10 +194,23 @@ class GestureService : LifecycleService() {
     }
 
     private fun onGesture(g: Gesture) {
+        if (practice) {
+            Log.d("GestureScroll", "gesture $g (test mode, not performed)")
+            mainExecutor.execute { publish("Test: ${if (g == Gesture.TOGGLE) "Pause or resume" else label(g)}") }
+            return
+        }
         if (g == Gesture.TOGGLE) paused = !paused
         Log.d("GestureScroll", "gesture $g${if (paused && g != Gesture.TOGGLE) " (ignored, paused)" else ""}")
         if (paused && g != Gesture.TOGGLE) return
-        val label = when (g) {
+        val label = label(g)
+        mainExecutor.execute {
+            publish(label)
+            if (g == Gesture.TOGGLE) Toast.makeText(this, if (paused) "dumscrl paused" else "dumscrl resumed", Toast.LENGTH_SHORT).show()
+            else GestureAccessibilityService.instance?.perform(g)
+        }
+    }
+
+    private fun label(g: Gesture) = when (g) {
             Gesture.SWIPE_UP -> "Next video"
             Gesture.SWIPE_DOWN -> "Previous video"
             Gesture.SWIPE_LEFT -> "Next app"
@@ -207,12 +224,6 @@ class GestureService : LifecycleService() {
             Gesture.TILT_RIGHT -> "Tilt right (next app)"
             Gesture.TOGGLE -> if (paused) "Paused: hold an open palm still 2 s to resume" else "Resumed"
         }
-        mainExecutor.execute {
-            publish(label)
-            if (g == Gesture.TOGGLE) Toast.makeText(this, if (paused) "dumscrl paused" else "dumscrl resumed", Toast.LENGTH_SHORT).show()
-            else GestureAccessibilityService.instance?.perform(g)
-        }
-    }
 
     /** pitch/roll as GestureDetector expects, from eye corners (33 = user's right, 263 = user's left) and nose tip (1). */
     private fun headPose(f: List<NormalizedLandmark>, w: Float, h: Float): Pair<Float, Float> {
@@ -249,7 +260,8 @@ class GestureService : LifecycleService() {
         instance = null
         status = "Stopped"
         listener?.invoke(status)
-        analysisThread.execute { hands?.close(); faces?.close() }
+        // Null them too: frames already queued behind this would otherwise run on a closed landmarker (native crash).
+        analysisThread.execute { hands?.close(); faces?.close(); hands = null; faces = null }
         analysisThread.shutdown()
         super.onDestroy()
     }

@@ -44,7 +44,7 @@ export default function App() {
         <StatusBar style="auto" />
         <Animated.View style={page}>
           {tab === 'home' && <Home engine={engine} />}
-          {tab === 'camera' && <Camera engine={engine} visible />}
+          {tab === 'camera' && <Camera engine={engine} />}
           {tab === 'signs' && <Signs current={engine.state.running ? engine.state.sign : ''} />}
           {tab === 'settings' && <Settings engine={engine} />}
         </Animated.View>

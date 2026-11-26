@@ -6,6 +6,8 @@ export type ThemePref = 'system' | 'light' | 'dark';
 
 interface DumscrlEngineNative {
   start(): void;
+  /** While on, signs are read and shown but nothing happens on the phone. */
+  setPractice(on: boolean): void;
   stop(): void;
   isRunning(): boolean;
   status(): string;

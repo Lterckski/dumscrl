@@ -1,5 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { CameraPreview } from '../../modules/dumscrl-engine';
+import * as Haptics from 'expo-haptics';
+import { useEffect } from 'react';
+import { AppState, PermissionsAndroid, StyleSheet, Text, View } from 'react-native';
+import { CameraPreview, Engine } from '../../modules/dumscrl-engine';
 import type { EngineApi } from '../engine';
 import { Metal } from '../Metal';
 import { Press } from '../Press';
@@ -7,32 +9,71 @@ import { signLabel } from '../signs';
 import { Page } from '../ui';
 import { radius, space, type, useColors } from '../theme';
 
-/** What the camera sees, with the tracked hand drawn on top and the sign it reads. */
-export function Camera({ engine, visible }: { engine: EngineApi; visible: boolean }) {
+/** Practice: what the camera sees, the tracked hand and the sign it reads. Nothing is performed on the phone here. */
+export function Camera({ engine }: { engine: EngineApi }) {
   const c = useColors();
-  const { state, start } = engine;
+  const { state, stop } = engine;
   const seen = signLabel(state.sign);
+
+  // While this tab is open, signs never act on the phone. If Start on Home is off, the camera runs only while
+  // this tab is open and in front.
+  useEffect(() => {
+    let ownCamera = false;
+    let left = false;
+    const open = async () => {
+      if (AppState.currentState !== 'active') return;
+      Engine.setPractice(true);
+      // Only with the camera already allowed: asking from here flips the app to background and back, which restarts this.
+      if (Engine.isRunning() || !(await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA)) || left) return;
+      ownCamera = true;
+      Engine.start();
+    };
+    // In another app, Start on Home works as normal again.
+    const close = () => {
+      Engine.setPractice(false);
+      if (ownCamera) stop();
+      ownCamera = false;
+    };
+    open();
+    const sub = AppState.addEventListener('change', (a) => (a === 'active' ? open() : close()));
+    return () => {
+      left = true;
+      sub.remove();
+      close();
+    };
+  }, [stop]);
+
+  // A tick when a sign would have fired. shortcut: the same sign twice in a row ticks once; count events if that matters.
+  useEffect(() => {
+    if (state.status.startsWith('Test: ')) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, [state.status]);
+
   return (
-    <Page title="Camera" subtitle="Keep your hand in the middle, 30–50 cm from the phone.">
+    <Page title="Camera" subtitle="Practice your signs here. Nothing happens on your phone while this tab is open.">
       <View style={[styles.frame, { backgroundColor: c.surface }]}>
-        {state.running && visible ? (
+        {state.running ? (
           <CameraPreview style={StyleSheet.absoluteFill} />
         ) : (
           <View style={styles.empty}>
-            <Text style={[type.body, { color: c.secondary, textAlign: 'center' }]}>The camera is off.</Text>
-            <Press onPress={start}>
-              <Metal style={styles.button}>
-                <Text style={[type.headline, { color: c.onMetal }]}>Start</Text>
-              </Metal>
-            </Press>
+            <Text style={[type.body, { color: c.secondary, textAlign: 'center' }]}>
+              {state.camera ? 'Starting the camera…' : 'dumscrl needs the camera to see your hand.'}
+            </Text>
+            {/* The dialog sends the app to the background and back, and coming back starts the camera above. */}
+            {!state.camera && (
+              <Press onPress={() => PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA)}>
+                <Metal style={styles.button}>
+                  <Text style={[type.headline, { color: c.onMetal }]}>Allow camera</Text>
+                </Metal>
+              </Press>
+            )}
           </View>
         )}
         {state.running && (
           <View style={[styles.badge, { backgroundColor: c.scrim }]}>
-            <Text style={[type.headline, { color: '#fff' }]}>
-              {state.paused ? 'Paused' : seen ? `${seen.emoji}  ${seen.name}` : 'No hand'}
+            <Text style={[type.headline, { color: '#fff' }]}>{seen ? `${seen.emoji}  ${seen.name}` : 'No hand'}</Text>
+            <Text style={[type.footnote, { color: 'rgba(255,255,255,0.75)' }]}>
+              {state.status.startsWith('Test: ') ? `Would do: ${state.status.slice(6)}` : seen?.does ? `Does: ${seen.does}` : 'Practice mode'}
             </Text>
-            {seen?.does && !state.paused ? <Text style={[type.footnote, { color: 'rgba(255,255,255,0.75)' }]}>{seen.does}</Text> : null}
           </View>
         )}
       </View>

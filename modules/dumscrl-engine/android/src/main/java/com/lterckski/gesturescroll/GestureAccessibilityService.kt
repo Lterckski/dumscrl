@@ -46,11 +46,12 @@ class GestureAccessibilityService : AccessibilityService() {
             Gesture.THUMBS_UP, Gesture.DOUBLE_NOD -> doubleTap(x, m.heightPixels / 2f)
             Gesture.SWIPE_LEFT, Gesture.TILT_RIGHT -> switchApp(+1)
             Gesture.SWIPE_RIGHT, Gesture.TILT_LEFT -> switchApp(-1)
+            // Carousels rarely expose scroll actions, so this usually falls back to a drawn swipe on the photo.
+            // It has to pass the halfway point with some speed or the photo snaps back (it did at 36% / 450 ms).
             Gesture.PHOTO_NEXT -> if (!scrollCarousel(AccessibilityAction.ACTION_SCROLL_RIGHT, x, m.heightPixels * 0.42f))
-                // Short and slow, on the photo: a long fast swipe makes TikTok change tabs (Following / profile) instead.
-                swipe(m.widthPixels * 0.68f, m.heightPixels * 0.42f, m.widthPixels * 0.32f, m.heightPixels * 0.42f, 450)
+                swipe(m.widthPixels * 0.85f, m.heightPixels * 0.42f, m.widthPixels * 0.15f, m.heightPixels * 0.42f, 220)
             Gesture.PHOTO_PREV -> if (!scrollCarousel(AccessibilityAction.ACTION_SCROLL_LEFT, x, m.heightPixels * 0.42f))
-                swipe(m.widthPixels * 0.32f, m.heightPixels * 0.42f, m.widthPixels * 0.68f, m.heightPixels * 0.42f, 450)
+                swipe(m.widthPixels * 0.15f, m.heightPixels * 0.42f, m.widthPixels * 0.85f, m.heightPixels * 0.42f, 220)
             Gesture.TOGGLE -> {}
         }
     }

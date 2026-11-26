@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { CameraPreview } from '../../modules/dumscrl-engine';
 import type { EngineApi } from '../engine';
+import { Metal } from '../Metal';
 import { Press } from '../Press';
 import { signLabel } from '../signs';
 import { Page } from '../ui';
@@ -19,13 +20,15 @@ export function Camera({ engine, visible }: { engine: EngineApi; visible: boolea
         ) : (
           <View style={styles.empty}>
             <Text style={[type.body, { color: c.secondary, textAlign: 'center' }]}>The camera is off.</Text>
-            <Press onPress={start} style={[styles.button, { backgroundColor: c.accent }]}>
-              <Text style={[type.headline, { color: '#fff' }]}>Start</Text>
+            <Press onPress={start}>
+              <Metal style={styles.button}>
+                <Text style={[type.headline, { color: c.onMetal }]}>Start</Text>
+              </Metal>
             </Press>
           </View>
         )}
         {state.running && (
-          <View style={[styles.badge, { backgroundColor: 'rgba(0,0,0,0.55)' }]}>
+          <View style={[styles.badge, { backgroundColor: c.scrim }]}>
             <Text style={[type.headline, { color: '#fff' }]}>
               {state.paused ? 'Paused' : seen ? `${seen.emoji}  ${seen.name}` : 'No hand'}
             </Text>
@@ -40,6 +43,6 @@ export function Camera({ engine, visible }: { engine: EngineApi; visible: boolea
 const styles = StyleSheet.create({
   frame: { aspectRatio: 3 / 4, borderRadius: 28, overflow: 'hidden' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.m, padding: space.l },
-  button: { paddingHorizontal: space.l, paddingVertical: 12, borderRadius: radius.pill },
+  button: { paddingHorizontal: space.l, paddingVertical: 12, borderRadius: radius.pill, overflow: 'hidden' },
   badge: { position: 'absolute', left: space.m, right: space.m, bottom: space.m, borderRadius: radius.row, paddingHorizontal: space.m, paddingVertical: 10, gap: 2 },
 });

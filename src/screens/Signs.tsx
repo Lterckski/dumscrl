@@ -1,7 +1,8 @@
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Metal } from '../Metal';
 import { SIGNS } from '../signs';
 import { Card, Page, Row, SectionLabel } from '../ui';
-import { space, type, useColors } from '../theme';
+import { radius, space, type, useColors } from '../theme';
 
 export function Signs({ current }: { current: string }) {
   const c = useColors();
@@ -13,7 +14,15 @@ export function Signs({ current }: { current: string }) {
             key={s.key}
             first={i === 0}
             label={`${s.emoji}   ${s.name}`}
-            right={<Text style={[type.headline, { color: s.key === current ? c.green : c.secondary, fontSize: 15 }]}>{s.does}</Text>}
+            right={
+              s.key === current ? (
+                <Metal style={styles.on}>
+                  <Text style={[type.headline, { color: c.onMetal, fontSize: 14 }]}>{s.does}</Text>
+                </Metal>
+              ) : (
+                <Text style={[type.headline, { color: c.secondary, fontSize: 15 }]}>{s.does}</Text>
+              )
+            }
           />
         ))}
       </Card>
@@ -21,9 +30,13 @@ export function Signs({ current }: { current: string }) {
       <Card>
         <View style={{ padding: space.m, gap: space.s }}>
           <Text style={[type.body, { color: c.text }]}>Prop the phone up or hold it at face height, with your other hand in front of the camera.</Text>
-          <Text style={[type.body, { color: c.text }]}>The sign you're making lights up green here while dumscrl is on.</Text>
+          <Text style={[type.body, { color: c.text }]}>While dumscrl is on, the sign you're making lights up here.</Text>
         </View>
       </Card>
     </Page>
   );
 }
+
+const styles = StyleSheet.create({
+  on: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill, overflow: 'hidden' },
+});

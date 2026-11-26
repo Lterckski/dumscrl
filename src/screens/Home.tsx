@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import type { EngineApi } from '../engine';
+import { Metal } from '../Metal';
 import { Press } from '../Press';
 import { signLabel } from '../signs';
 import { Card, Page, Row, SectionLabel } from '../ui';
@@ -24,13 +25,18 @@ export function Home({ engine }: { engine: EngineApi }) {
         <Press
           onPress={on ? stop : start}
           scaleTo={0.94}
-          style={[styles.big, { borderColor: on ? c.green : c.accent }]}
+          style={styles.big}
           accessibilityRole="button"
           accessibilityLabel={on ? 'Stop dumscrl' : 'Start dumscrl'}
         >
-          <Animated.View style={[StyleSheet.absoluteFill, styles.bigFill, { backgroundColor: c.green, opacity: fill, transform: [{ scale: fill }] }]} />
-          <Ionicons name={on ? 'stop' : 'play'} size={44} color={on ? '#000' : c.accent} />
-          <Text style={[type.headline, { color: on ? '#000' : c.accent, marginTop: space.xs }]}>{on ? 'Stop' : 'Start'}</Text>
+          {/* Metal ring when off; the metal fills in from the centre when on. */}
+          <Metal style={StyleSheet.absoluteFill} />
+          <View style={[styles.inner, { backgroundColor: c.disc }]} />
+          <Animated.View style={[StyleSheet.absoluteFill, styles.round, { opacity: fill, transform: [{ scale: fill }] }]}>
+            <Metal style={[StyleSheet.absoluteFill, styles.round]} />
+          </Animated.View>
+          <Ionicons name={on ? 'stop' : 'play'} size={44} color={on ? c.onMetal : c.accent} />
+          <Text style={[type.headline, { color: on ? c.onMetal : c.accent, marginTop: space.xs }]}>{on ? 'Stop' : 'Start'}</Text>
         </Press>
         <Text style={[type.footnote, { color: c.secondary, textAlign: 'center' }]}>
           {!on ? 'Tap to start watching for hand signs.' : state.paused ? 'Paused. Hold an open palm 2 s, or tap Resume.' : seen ? `Seeing ${seen.emoji}  ${seen.name.toLowerCase()}` : 'Watching. Show your hand to the front camera.'}
@@ -62,22 +68,25 @@ export function Home({ engine }: { engine: EngineApi }) {
 
 function Ok() {
   const c = useColors();
-  return <Ionicons name="checkmark-circle" size={24} color={c.green} accessibilityLabel="Done" />;
+  return <Ionicons name="checkmark-circle" size={24} color={c.accent} accessibilityLabel="Done" />;
 }
 
 function Action({ label, onPress }: { label: string; onPress: () => void }) {
   const c = useColors();
   return (
-    <Press onPress={onPress} style={[styles.action, { backgroundColor: c.accent }]}>
-      <Text style={[type.headline, { color: '#fff', fontSize: 15 }]}>{label}</Text>
+    <Press onPress={onPress}>
+      <Metal style={styles.action}>
+        <Text style={[type.headline, { color: c.onMetal, fontSize: 15 }]}>{label}</Text>
+      </Metal>
     </Press>
   );
 }
 
 const styles = StyleSheet.create({
   center: { alignItems: 'center', gap: space.m, paddingVertical: space.l },
-  big: { width: 188, height: 188, borderRadius: radius.pill, borderWidth: 3, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  bigFill: { borderRadius: radius.pill },
+  big: { width: 188, height: 188, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  round: { borderRadius: radius.pill, overflow: 'hidden' },
+  inner: { position: 'absolute', top: 3, left: 3, right: 3, bottom: 3, borderRadius: radius.pill },
   chip: { paddingHorizontal: space.l, paddingVertical: 10, borderRadius: radius.pill },
-  action: { paddingHorizontal: space.m, paddingVertical: 8, borderRadius: radius.pill },
+  action: { paddingHorizontal: space.m, paddingVertical: 8, borderRadius: radius.pill, overflow: 'hidden' },
 });

@@ -17,6 +17,8 @@ class DumscrlEngineModule : Module() {
   private val context: Context
     get() = appContext.reactContext ?: throw Exceptions.ReactContextLost()
 
+  private fun prefs() = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+
   override fun definition() = ModuleDefinition {
     Name("DumscrlEngine")
     Events("onStatus", "onSign")
@@ -54,6 +56,10 @@ class DumscrlEngineModule : Module() {
     Function("openAccessibilitySettings") {
       context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
+
+    // "system", "light" or "dark"; kept natively so it's there before the first frame.
+    Function("getTheme") { prefs().getString("theme", "system") }
+    Function("setTheme") { theme: String -> prefs().edit().putString("theme", theme).apply() }
 
     View(DumscrlPreviewView::class) {}
   }

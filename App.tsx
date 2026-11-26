@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, StyleSheet, View } from 'react-native';
@@ -8,7 +9,9 @@ import { Home } from './src/screens/Home';
 import { Settings } from './src/screens/Settings';
 import { Signs } from './src/screens/Signs';
 import { TabBar, type Tab } from './src/TabBar';
-import { spring, useColors } from './src/theme';
+import { applyTheme, savedTheme, spring, useColors } from './src/theme';
+
+applyTheme(savedTheme()); // before the first frame, so there's no flash of the wrong theme
 
 export default function App() {
   const c = useColors();
@@ -36,7 +39,8 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <View style={[styles.root, { backgroundColor: c.bg }]}>
+      <View style={styles.root}>
+        <LinearGradient colors={c.backdrop} locations={[0, 0.4, 0.7, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
         <StatusBar style="auto" />
         <Animated.View style={page}>
           {tab === 'home' && <Home engine={engine} />}

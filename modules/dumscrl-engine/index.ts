@@ -2,6 +2,7 @@ import { requireNativeModule, requireNativeView, type EventSubscription } from '
 import type { ViewProps } from 'react-native';
 
 export type Mode = 'signs' | 'flicks' | 'head' | 'signs+head';
+export type ThemePref = 'system' | 'light' | 'dark';
 
 interface DumscrlEngineNative {
   start(): void;
@@ -14,6 +15,8 @@ interface DumscrlEngineNative {
   setPaused(paused: boolean): Promise<void>;
   isAccessibilityEnabled(): boolean;
   openAccessibilitySettings(): void;
+  getTheme(): ThemePref;
+  setTheme(theme: ThemePref): void;
   addListener(event: 'onStatus', fn: (e: { label: string }) => void): EventSubscription;
   addListener(event: 'onSign', fn: (e: { sign: string; paused: boolean }) => void): EventSubscription;
 }

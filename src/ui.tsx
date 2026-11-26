@@ -8,7 +8,7 @@ export function Page({ title, subtitle, children }: { title: string; subtitle?: 
   const c = useColors();
   const insets = useSafeAreaInsets();
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: c.bg }} contentContainerStyle={{ paddingTop: insets.top + space.l, paddingBottom: insets.bottom + 120, paddingHorizontal: space.m, gap: space.m }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: insets.top + space.l, paddingBottom: insets.bottom + 120, paddingHorizontal: space.m, gap: space.m }}>
       <View style={{ gap: space.xs, paddingHorizontal: space.xs }}>
         <Text style={[type.title, { color: c.text }]} accessibilityRole="header">{title}</Text>
         {subtitle ? <Text style={[type.body, { color: c.secondary }]}>{subtitle}</Text> : null}
@@ -20,7 +20,7 @@ export function Page({ title, subtitle, children }: { title: string; subtitle?: 
 
 export function Card({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   const c = useColors();
-  return <View style={[{ backgroundColor: c.surface, borderRadius: radius.card, overflow: 'hidden' }, style]}>{children}</View>;
+  return <View style={[{ backgroundColor: c.surface, borderRadius: radius.card, borderWidth: StyleSheet.hairlineWidth, borderColor: c.separator, overflow: 'hidden' }, style]}>{children}</View>;
 }
 
 /** One line in a card: label on the left, value or control on the right. Hairline between rows. */

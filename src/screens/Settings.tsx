@@ -3,11 +3,25 @@ import { Linking, StyleSheet, Text, View } from 'react-native';
 import type { EngineApi } from '../engine';
 import { Press } from '../Press';
 import { Card, Page, Row, SectionLabel } from '../ui';
-import { radius, space, type, useColors } from '../theme';
+import { applyTheme, radius, savedTheme, space, type, useColors } from '../theme';
+import type { ThemePref } from '../../modules/dumscrl-engine';
+import { Metal } from '../Metal';
+import { useState } from 'react';
+
+const THEMES: { key: ThemePref; label: string }[] = [
+  { key: 'system', label: 'System' },
+  { key: 'light', label: 'Light' },
+  { key: 'dark', label: 'Dark' },
+];
 
 export function Settings({ engine }: { engine: EngineApi }) {
   const c = useColors();
   const { state, setMode, openPhoneControl } = engine;
+  const [theme, setTheme] = useState<ThemePref>(savedTheme);
+  const pickTheme = (t: ThemePref) => {
+    setTheme(t);
+    applyTheme(t);
+  };
   return (
     <Page title="Settings">
       <SectionLabel>Control with</SectionLabel>
@@ -19,6 +33,26 @@ export function Settings({ engine }: { engine: EngineApi }) {
           <Row label="Flicks" detail="Flick your hand up or down to scroll." right={<View style={[styles.badge, { backgroundColor: c.raised }]}><Text style={[type.caption, { color: c.secondary }]}>IN DEVELOPMENT</Text></View>} />
         </Press>
       </Card>
+
+      <SectionLabel>Appearance</SectionLabel>
+      <View style={[styles.segment, { backgroundColor: c.surface }]}>
+        {THEMES.map((t) => {
+          const on = t.key === theme;
+          return (
+            <Press key={t.key} containerStyle={{ flex: 1 }} scaleTo={0.94} onPress={() => pickTheme(t.key)} accessibilityRole="radio" accessibilityState={{ checked: on }}>
+              {on ? (
+                <Metal style={styles.segmentItem}>
+                  <Text style={[type.headline, { color: c.onMetal, fontSize: 15 }]}>{t.label}</Text>
+                </Metal>
+              ) : (
+                <View style={styles.segmentItem}>
+                  <Text style={[type.headline, { color: c.secondary, fontSize: 15 }]}>{t.label}</Text>
+                </View>
+              )}
+            </Press>
+          );
+        })}
+      </View>
 
       <SectionLabel>Phone</SectionLabel>
       <Card>
@@ -40,4 +74,6 @@ export function Settings({ engine }: { engine: EngineApi }) {
 
 const styles = StyleSheet.create({
   badge: { paddingHorizontal: space.s, paddingVertical: 4, borderRadius: radius.pill },
+  segment: { flexDirection: 'row', padding: 4, borderRadius: radius.pill, gap: 4 },
+  segmentItem: { alignItems: 'center', paddingVertical: 10, borderRadius: radius.pill, overflow: 'hidden' },
 });

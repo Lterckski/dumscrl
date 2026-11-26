@@ -1,16 +1,19 @@
 import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radius, space, type, useColors } from './theme';
 
 /** A scrolling page with a large title, padded clear of the floating tab bar. */
-export function Page({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
+export function Page({ title, subtitle, icon, children }: { title: string; subtitle?: string; icon?: ImageSourcePropType; children: ReactNode }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: insets.top + space.l, paddingBottom: insets.bottom + 120, paddingHorizontal: space.m, gap: space.m }}>
       <View style={{ gap: space.xs, paddingHorizontal: space.xs }}>
-        <Text style={[type.title, { color: c.text }]} accessibilityRole="header">{title}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.s }}>
+          {icon ? <Image source={icon} style={{ width: 40, height: 40, borderRadius: 10 }} accessibilityIgnoresInvertColors /> : null}
+          <Text style={[type.title, { color: c.text }]} accessibilityRole="header">{title}</Text>
+        </View>
         {subtitle ? <Text style={[type.body, { color: c.secondary }]}>{subtitle}</Text> : null}
       </View>
       {children}

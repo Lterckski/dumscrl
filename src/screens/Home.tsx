@@ -20,7 +20,7 @@ export function Home({ engine }: { engine: EngineApi }) {
   useEffect(() => Animated.spring(fill, { toValue: on ? 1 : 0, ...spring }).start(), [on, fill]);
 
   return (
-    <Page title="dumscrl" subtitle="Scroll, like and flip photos with a hand sign. No touching the screen.">
+    <Page title="dumscrl" icon={require('../../assets/logo.png')} subtitle="Scroll, like and flip photos with a hand sign. No touching the screen.">
       <View style={styles.center}>
         <Press
           onPress={on ? stop : start}

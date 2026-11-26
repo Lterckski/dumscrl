@@ -10,5 +10,13 @@ export const SIGNS = [
   { key: 'open palm', emoji: '✋', name: 'Open palm, hold 2 s', does: 'Pause or resume' },
 ] as const;
 
+// Shapes the engine reports that don't do anything, so they stay out of the Signs guide.
+const OTHERS: Record<string, { emoji: string; name: string }> = {
+  fist: { emoji: '✊', name: 'Fist' },
+  'thumb right': { emoji: '👉', name: 'Thumb out to your right' },
+  other: { emoji: '🤚', name: 'Hand' },
+};
+
 export const signLabel = (sign: string) =>
-  SIGNS.find((s) => s.key === sign) ?? (sign === 'no hand' ? null : { key: sign, emoji: '🤚', name: sign, does: '' });
+  SIGNS.find((s) => s.key === sign) ??
+  (sign === 'no hand' ? null : { key: sign, does: '', ...(OTHERS[sign] ?? { emoji: '🤚', name: sign }) });

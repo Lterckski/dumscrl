@@ -20,40 +20,8 @@ class HandDetectorTest {
         }
     }
 
-    @Test fun swipeUpThenHandComesBackIsOneScroll() {
-        move(300); move(250, dyPalms = -3f); move(400, dyPalms = 3f); move(500)
-        assertEquals(listOf(Gesture.SWIPE_UP), out)
-    }
-
-    @Test fun swipeDown() {
-        move(300); move(250, dyPalms = 3f); move(500)
-        assertEquals(listOf(Gesture.SWIPE_DOWN), out)
-    }
-
-    @Test fun swipeToUsersLeftAndRight() {
-        move(300); move(250, dxPalms = 3f); move(900); move(250, dxPalms = -3f); move(500)
-        assertEquals(listOf(Gesture.SWIPE_LEFT, Gesture.SWIPE_RIGHT), out)
-    }
-
-    @Test fun repeatedSwipesSameWayEachScroll() {
-        move(300)
-        repeat(3) { move(250, dyPalms = -3f); move(700, dyPalms = 3f, open = false) } // hand closed on the way back
-        assertEquals(List(3) { Gesture.SWIPE_UP }, out)
-    }
-
-    @Test fun closedHandOrSlowDriftDoesNothing() {
-        move(600, open = false); move(250, dyPalms = -3f, open = false); move(250, dxPalms = 3f, open = false)
-        move(500, open = true); move(800, dyPalms = 0.8f); move(800, dxPalms = -0.8f)
-        assertEquals(emptyList<Gesture>(), out)
-    }
-
-    @Test fun flickWithHandBlurredOutMidwayStillSwipes() {
-        move(300); move(100, dyPalms = -0.5f); t += 120; move(100, dyPalms = -0.6f); move(500) // 120 ms with no hand
-        assertEquals(listOf(Gesture.SWIPE_UP), out)
-    }
-
-    @Test fun handReappearingElsewhereIsNotASwipe() {
-        move(300); t += 1000; y -= 3 * palm; move(500)
+    @Test fun movingOpenHandDoesNothing() { // moving gestures are FlickDetector's
+        move(300); move(250, dyPalms = -3f); move(250, dxPalms = 3f); move(500)
         assertEquals(emptyList<Gesture>(), out)
     }
 
@@ -76,14 +44,6 @@ class HandDetectorTest {
     @Test fun sameSignFiresAgainAfterHandLeaves() {
         move(300); move(600, pose = Gesture.SWIPE_UP, open = false); t += 1000; move(600, pose = Gesture.SWIPE_UP, open = false)
         assertEquals(listOf(Gesture.SWIPE_UP, Gesture.SWIPE_UP), out)
-    }
-
-    @Test fun signModeIgnoresFlicks() {
-        val signs = HandDetector(swipes = false)
-        var tt = 0L; var yy = 300f
-        val got = mutableListOf<Gesture>()
-        repeat(30) { signs.feed(tt, 300f, yy, 60f, true, null)?.let(got::add); tt += 33; if (it > 10) yy -= 20f }
-        assertEquals(emptyList<Gesture>(), got)
     }
 
     @Test fun thumbsUpLikesOnce() {

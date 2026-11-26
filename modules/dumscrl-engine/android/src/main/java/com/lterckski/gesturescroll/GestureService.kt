@@ -54,6 +54,14 @@ class GestureService : LifecycleService() {
         }
         /** Set by the visible activity: each frame, its hand points (x0,y0,x1,y1… in frame pixels) and live numbers. */
         var previewListener: ((Int, Int, FloatArray?, String) -> Unit)? = null
+        /** Flicks mode, while a preview is showing, ~10 times a second: speed, threshold, cooldown left/total (ms), last flick and when. */
+        var meterListener: ((Float, Float, Long, Long, String?, Long) -> Unit)? = null
+        fun flickCooldownMs(c: Context) = c.getSharedPreferences("settings", MODE_PRIVATE).getLong("flickCooldownMs", 1000)
+        /** Saved, and applied to a running engine straight away. */
+        fun setFlickCooldownMs(c: Context, ms: Long) {
+            c.getSharedPreferences("settings", MODE_PRIVATE).edit().putLong("flickCooldownMs", ms).apply()
+            instance?.flicks?.cooldownMs = ms
+        }
         @Volatile private var instance: GestureService? = null
         /** The visible activity's PreviewView; the camera shows straight into it, without waiting for detection. */
         var previewSurface: Preview.SurfaceProvider? = null
@@ -67,7 +75,9 @@ class GestureService : LifecycleService() {
     private val analysisThread = Executors.newSingleThreadExecutor()
     private val headDetector = GestureDetector()
     private lateinit var mode: String
-    private val handDetector by lazy { HandDetector(swipes = mode == "flicks") }
+    private val handDetector = HandDetector()
+    private val flicks by lazy { FlickDetector(cooldownMs = flickCooldownMs(this)) }
+    private var meterAt = 0L
     private var faces: FaceLandmarker? = null
     private var hands: HandLandmarker? = null
     @Volatile private var paused = false
@@ -151,9 +161,17 @@ class GestureService : LifecycleService() {
         ageMs += SystemClock.elapsedRealtime() - t
         if (previewListener != null) {
             val pts = lastPoints
-            val info = lastHand + (if (mode == "flicks") "\nswipe travel ${"%.2f".format(handDetector.travel)} of ${handDetector.minTravelPalms} palms" else "") +
+            val info = lastHand + (if (mode == "flicks") "\nfingertip ${"%.1f".format(flicks.speed)} of ${flicks.minSpeed} palms/s" else "") +
                 if (paused) "\nPAUSED" else ""
             mainExecutor.execute { previewListener?.invoke(w.toInt(), h.toInt(), pts, info) }
+        }
+        if (mode == "flicks" && previewListener != null && t - meterAt >= 100) {
+            meterAt = t
+            val left = (flicks.cooldownUntil - t).coerceAtLeast(0)
+            val last = flicks.lastFlick?.let { label(it) }
+            val at = flicks.cooldownUntil - flicks.cooldownMs
+            val speed = flicks.speed
+            mainExecutor.execute { meterListener?.invoke(speed, flicks.minSpeed, left, flicks.cooldownMs, last, at) }
         }
         val sign = lastHand.substringAfter("hand: ", "no hand").substringBefore(" (")
         if (sign != lastSign || paused != lastSignPaused) {
@@ -178,12 +196,15 @@ class GestureService : LifecycleService() {
         val palm = hypot(px[0] - px[9], py[0] - py[9])
         val shape = classifyHand(px, py)
         // Flick mode keeps thumbs up as its only sign.
-        val pose = if (mode == "flicks" && shape.pose != Gesture.THUMBS_UP) null else shape.pose
+        // Flicks mode: a pointing finger is for flicking, so the index-up sign is off; the other signs still work.
+        val pose = if (mode == "flicks" && shape.name == "point") null else shape.pose
         val cx = (px[0] + px[5] + px[9] + px[17]) / 4
         val cy = (py[0] + py[5] + py[9] + py[17]) / 4
         lastHand = "hand: ${shape.name} (${shape.fingers} fingers${if (shape.thumbOut) " + thumb" else ""}) palm=${palm.toInt()}px at ${cx.toInt()},${cy.toInt()}"
         // shortcut: a hand close to the lens has a huge palm, so cap the unit at 1/5 of the frame; tune on the phone.
-        return handDetector.feed(t, cx, cy, minOf(palm, h / 5), shape.open, pose)
+        val unit = minOf(palm, h / 5)
+        val flick = if (mode == "flicks") flicks.feed(t, px[8], py[8], unit, shape.name == "point") else null
+        return flick ?: handDetector.feed(t, cx, cy, unit, shape.open, pose)
     }
 
     private fun headGesture(lm: FaceLandmarker, mp: MPImage, t: Long, w: Float, h: Float): Gesture? {

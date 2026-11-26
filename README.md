@@ -32,18 +32,36 @@ dumscrl is an Android app for scrolling while your hands are busy (or greasy, be
 
 Functionality first, and Android only.
 
-- **Hand signs** is the mode to use.
-- **Flicks** (flick your hand up or down to scroll) is in development.
+- **Hand signs** is the default mode.
+- **Flicks** is the other mode: see below.
 - **Head** (nod and tilt) exists in the engine but is hidden in the app.
+
+## Flicks mode
+
+Pick **Flicks** in Settings. Point your index finger with the other fingers curled, then flick it:
+
+| Flick | Does |
+| --- | --- |
+| Up | Next video |
+| Down | Previous video |
+| To your left | Next photo |
+| To your right | Previous photo |
+
+- A flick is the fingertip moving at least 4 palm-lengths a second (and at least 0.6 of a palm), so it works at any distance from the camera.
+- After each flick, every flick is ignored for a while: 1.0 s by default, adjustable from 0.3 to 2.0 s in Settings.
+- Bringing your finger back never counts as the opposite flick. The opposite direction only counts again after the finger has rested for about 0.15 s.
+- The index-up sign is off in this mode (pointing is how you flick), but every other sign and the palm-hold pause still work.
+- On the Camera tab, flicks show an arrow, "Would do: …", your fingertip speed against the threshold, and the wait left before the next flick counts.
 
 ## Stack
 
 - Expo SDK 58, React Native 0.88.1, React 19.3, TypeScript 6.0
 - Kotlin gesture engine as a local Expo module (`modules/dumscrl-engine`)
+- `@react-native-community/slider` for the flick wait setting
 - CameraX 1.7.0, MediaPipe Tasks Vision 0.10.26.1 (`hand_landmarker.task`, plus `face_landmarker.task` for head mode)
 - JUnit 4 for the engine's unit tests
 
-**How it fits together.** The React Native app is the UI: Home with the Start button and the setup checklist, then the Camera, Signs and Settings tabs. Everything else runs in Kotlin. `GestureService` is a foreground service that runs the front camera and hand tracking off the main thread. `HandPose` names the sign from the 21 hand landmarks, and `HandDetector` decides when a held sign fires. `GestureAccessibilityService` performs the resulting swipe, double tap or app switch. The JS side talks to the engine through the module's functions and events (`start`, `stop`, `setPractice`, `onSign`, `onStatus`) and a native camera preview view.
+**How it fits together.** The React Native app is the UI: Home with the Start button and the setup checklist, then the Camera, Signs and Settings tabs. Everything else runs in Kotlin. `GestureService` is a foreground service that runs the front camera and hand tracking off the main thread. `HandPose` names the sign from the 21 hand landmarks, `HandDetector` decides when a held sign fires, and `FlickDetector` reads index-finger flicks. `GestureAccessibilityService` performs the resulting swipe, double tap or app switch. The JS side talks to the engine through the module's functions and events (`start`, `stop`, `setPractice`, `setFlickCooldown`, `onSign`, `onStatus`, `onFlickMeter`) and a native camera preview view.
 
 ## Requirements
 

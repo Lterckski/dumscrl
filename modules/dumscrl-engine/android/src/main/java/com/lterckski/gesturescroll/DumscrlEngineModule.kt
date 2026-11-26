@@ -21,15 +21,19 @@ class DumscrlEngineModule : Module() {
 
   override fun definition() = ModuleDefinition {
     Name("DumscrlEngine")
-    Events("onStatus", "onSign")
+    Events("onStatus", "onSign", "onFlickMeter")
 
     OnStartObserving {
       GestureService.listener = { sendEvent("onStatus", mapOf("label" to it)) }
       GestureService.signListener = { sign, paused -> sendEvent("onSign", mapOf("sign" to sign, "paused" to paused)) }
+      GestureService.meterListener = { speed, threshold, left, total, last, at ->
+        sendEvent("onFlickMeter", mapOf("speed" to speed, "threshold" to threshold, "cooldownLeft" to left, "cooldown" to total, "last" to last, "at" to at))
+      }
     }
     OnStopObserving {
       GestureService.listener = null
       GestureService.signListener = null
+      GestureService.meterListener = null
     }
 
     // Camera permission must be granted first (asked from JavaScript).
@@ -57,6 +61,9 @@ class DumscrlEngineModule : Module() {
         context.startForegroundService(Intent(context, GestureService::class.java))
       }
     }
+
+    Function("getFlickCooldown") { GestureService.flickCooldownMs(context) }
+    Function("setFlickCooldown") { ms: Long -> GestureService.setFlickCooldownMs(context, ms.coerceIn(300, 2000)) }
 
     Function("isPaused") { GestureService.isPaused }
     AsyncFunction("setPaused") { paused: Boolean -> GestureService.setPaused(paused) }.runOnQueue(Queues.MAIN)

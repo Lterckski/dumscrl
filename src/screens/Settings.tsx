@@ -4,7 +4,8 @@ import type { EngineApi } from '../engine';
 import { Press } from '../Press';
 import { Card, Page, Row, SectionLabel } from '../ui';
 import { applyTheme, radius, savedTheme, space, type, useColors } from '../theme';
-import type { ThemePref } from '../../modules/dumscrl-engine';
+import Slider from '@react-native-community/slider';
+import { Engine, type ThemePref } from '../../modules/dumscrl-engine';
 import { Metal } from '../Metal';
 import { useState } from 'react';
 
@@ -18,6 +19,7 @@ export function Settings({ engine }: { engine: EngineApi }) {
   const c = useColors();
   const { state, setMode, openPhoneControl } = engine;
   const [theme, setTheme] = useState<ThemePref>(savedTheme);
+  const [cooldown, setCooldown] = useState(Engine.getFlickCooldown);
   const pickTheme = (t: ThemePref) => {
     setTheme(t);
     applyTheme(t);
@@ -29,10 +31,35 @@ export function Settings({ engine }: { engine: EngineApi }) {
         <Press onPress={() => setMode('signs')} scaleTo={0.98} accessibilityRole="radio" accessibilityState={{ checked: state.mode === 'signs' }}>
           <Row first label="Hand signs" detail="Hold up a sign to scroll, like or flip photos." right={state.mode === 'signs' ? <Ionicons name="checkmark" size={22} color={c.accent} /> : null} />
         </Press>
-        <Press disabled scaleTo={1} accessibilityRole="radio" accessibilityState={{ disabled: true }}>
-          <Row label="Flicks" detail="Flick your hand up or down to scroll." right={<View style={[styles.badge, { backgroundColor: c.raised }]}><Text style={[type.caption, { color: c.secondary }]}>IN DEVELOPMENT</Text></View>} />
+        <Press onPress={() => setMode('flicks')} scaleTo={0.98} accessibilityRole="radio" accessibilityState={{ checked: state.mode === 'flicks' }}>
+          <Row label="Flicks" detail="Point and flick your finger: up or down to scroll, left or right for photos. Other signs still work." right={state.mode === 'flicks' ? <Ionicons name="checkmark" size={22} color={c.accent} /> : null} />
         </Press>
       </Card>
+
+      {state.mode === 'flicks' && (
+        <>
+          <SectionLabel>Flicks</SectionLabel>
+          <Card style={styles.sliderCard}>
+            <View style={styles.sliderHead}>
+              <Text style={[type.body, { color: c.text }]}>Wait between flicks</Text>
+              <Text style={[type.body, { color: c.secondary, fontVariant: ['tabular-nums'] }]}>{(cooldown / 1000).toFixed(1)} s</Text>
+            </View>
+            <Slider
+              minimumValue={300}
+              maximumValue={2000}
+              step={100}
+              value={cooldown}
+              onValueChange={setCooldown}
+              onSlidingComplete={Engine.setFlickCooldown}
+              minimumTrackTintColor={c.accent}
+              maximumTrackTintColor={c.separator}
+              thumbTintColor={c.accent}
+              accessibilityLabel="Wait between flicks"
+            />
+            <Text style={[type.footnote, { color: c.secondary }]}>Longer stops one flick from scrolling twice. Bringing your finger back never counts as the opposite flick.</Text>
+          </Card>
+        </>
+      )}
 
       <SectionLabel>Appearance</SectionLabel>
       <View style={[styles.segment, { backgroundColor: c.surface }]}>
@@ -73,7 +100,8 @@ export function Settings({ engine }: { engine: EngineApi }) {
 }
 
 const styles = StyleSheet.create({
-  badge: { paddingHorizontal: space.s, paddingVertical: 4, borderRadius: radius.pill },
+  sliderCard: { padding: space.m, gap: space.s },
+  sliderHead: { flexDirection: 'row', justifyContent: 'space-between' },
   segment: { flexDirection: 'row', padding: 4, borderRadius: radius.pill, gap: 4 },
   segmentItem: { alignItems: 'center', paddingVertical: 10, borderRadius: radius.pill, overflow: 'hidden' },
 });

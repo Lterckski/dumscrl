@@ -2,6 +2,7 @@ import { requireNativeModule, requireNativeView, type EventSubscription } from '
 import type { ViewProps } from 'react-native';
 
 export type Mode = 'signs' | 'flicks' | 'head' | 'signs+head';
+export type FlickMeter = { speed: number; threshold: number; cooldownLeft: number; cooldown: number; last: string | null; at: number };
 export type ThemePref = 'system' | 'light' | 'dark';
 
 interface DumscrlEngineNative {
@@ -21,6 +22,10 @@ interface DumscrlEngineNative {
   setTheme(theme: ThemePref): void;
   addListener(event: 'onStatus', fn: (e: { label: string }) => void): EventSubscription;
   addListener(event: 'onSign', fn: (e: { sign: string; paused: boolean }) => void): EventSubscription;
+  /** Flicks mode, while the camera preview shows: speeds in palms/s, times in ms; last = the last flick's action. */
+  addListener(event: 'onFlickMeter', fn: (e: FlickMeter) => void): EventSubscription;
+  getFlickCooldown(): number;
+  setFlickCooldown(ms: number): void;
 }
 
 export const Engine = requireNativeModule<DumscrlEngineNative>('DumscrlEngine');

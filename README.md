@@ -23,6 +23,7 @@ dumscrl is an Android app for scrolling while your hands are busy (or greasy, be
 | Any four fingers (thumb counts) | 🖖 | Previous app |
 | Open palm, hold 2 s | ✋ | Pause or resume |
 
+- Each sign has an on/off switch on the Signs tab. A switched-off sign does nothing, in either mode.
 - A sign fires once you've held it still for about 1/3 second; a sign your hand only passes through while turning doesn't count. To fire the same sign again, lower your hand or change to another sign first.
 - "Next app" and "Previous app" cycle through Facebook, Instagram and TikTok, whichever of them are installed.
 - **The Camera tab is a practice area.** It shows what the camera sees, the tracked hand and the sign it reads ("Would do: Next video"), but it never acts on the phone.

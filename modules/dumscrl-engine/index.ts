@@ -24,6 +24,9 @@ interface DumscrlEngineNative {
   addListener(event: 'onSign', fn: (e: { sign: string; paused: boolean }) => void): EventSubscription;
   /** Flicks mode, while the camera preview shows: speeds in palms/s, times in ms; last = the last flick's action. */
   addListener(event: 'onFlickMeter', fn: (e: FlickMeter) => void): EventSubscription;
+  /** Signs switched off, by gesture name (see SIGNS in src/signs.ts). */
+  getDisabledSigns(): string[];
+  setSignEnabled(gesture: string, on: boolean): void;
   getFlickCooldown(): number;
   setFlickCooldown(ms: number): void;
 }

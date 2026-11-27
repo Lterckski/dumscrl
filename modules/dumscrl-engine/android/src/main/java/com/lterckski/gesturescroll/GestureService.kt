@@ -57,6 +57,17 @@ class GestureService : LifecycleService() {
         /** Flicks mode, while a preview is showing, ~10 times a second: speed, threshold, cooldown left/total (ms), last flick and when. */
         var meterListener: ((Float, Float, Long, Long, String?, Long) -> Unit)? = null
         fun flickCooldownMs(c: Context) = c.getSharedPreferences("settings", MODE_PRIVATE).getLong("flickCooldownMs", 600) // a finger snap repeats about once a second; 1.0 s swallowed every other one
+        /** Signs switched off on the Signs tab, by Gesture name (TOGGLE = the open-palm pause). Read every frame. */
+        @Volatile var disabledSigns: Set<String> = emptySet()
+            private set
+        fun loadDisabledSigns(c: Context) {
+            disabledSigns = c.getSharedPreferences("settings", MODE_PRIVATE).getStringSet("disabledSigns", null)?.toSet() ?: emptySet()
+        }
+        fun setSignEnabled(c: Context, gesture: String, on: Boolean) {
+            loadDisabledSigns(c)
+            disabledSigns = if (on) disabledSigns - gesture else disabledSigns + gesture
+            c.getSharedPreferences("settings", MODE_PRIVATE).edit().putStringSet("disabledSigns", disabledSigns).apply()
+        }
         /** Saved, and applied to a running engine straight away. */
         fun setFlickCooldownMs(c: Context, ms: Long) {
             c.getSharedPreferences("settings", MODE_PRIVATE).edit().putLong("flickCooldownMs", ms).apply()
@@ -101,6 +112,7 @@ class GestureService : LifecycleService() {
         )
         startForeground(NOTIF_ID, notification("Watching for gestures"), ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA)
         mode = mode(this)
+        loadDisabledSigns(this)
         instance = this // before publishing, so the app reads running = true
         publish("Watching for gestures")
         if (stopRequested) { stopSelf(); return }
@@ -199,7 +211,7 @@ class GestureService : LifecycleService() {
         val shape = classifyHand(px, py)
         val flickFingers = if (mode == "flicks") shape.flickFingers else null
         // A flicking hand isn't a sign, even with the thumb loose (index + middle + thumb would count as three).
-        val pose = if (flickFingers != null) null else shape.pose.takeIf { signAllowed(mode, it) }
+        val pose = if (flickFingers != null) null else shape.pose?.takeIf { signAllowed(mode, it) && it.name !in disabledSigns }
         val cx = (px[0] + px[5] + px[9] + px[17]) / 4
         val cy = (py[0] + py[5] + py[9] + py[17]) / 4
         lastHand = "hand: ${when (flickFingers) { 1 -> "point"; 2 -> "peace"; else -> shape.name }} (${shape.fingers} fingers${if (shape.thumbOut) " + thumb" else ""}) palm=${palm.toInt()}px at ${cx.toInt()},${cy.toInt()}"
@@ -209,7 +221,7 @@ class GestureService : LifecycleService() {
         val keys = FloatArray(STILL_POINTS.size * 2) { if (it % 2 == 0) px[STILL_POINTS[it / 2]] else py[STILL_POINTS[it / 2]] }
         if (practice) Log.d("GestureScrollHand", "${shape.name} ${fingerReadout(px, py)}" + // tuning: adb logcat -s GestureScrollHand
             if (mode == "flicks") " | speed ${"%.1f".format(flicks.speed)} wait ${(flicks.cooldownUntil - t).coerceAtLeast(0)} reverseOk=${flicks.reverseReady} flick=$flick" else "")
-        return flick ?: handDetector.feed(t, cx, cy, unit, shape.open, pose, keys)
+        return flick ?: handDetector.feed(t, cx, cy, unit, shape.open, pose, keys)?.takeIf { it.name !in disabledSigns }
     }
 
     private fun headGesture(lm: FaceLandmarker, mp: MPImage, t: Long, w: Float, h: Float): Gesture? {

@@ -62,6 +62,8 @@ class DumscrlEngineModule : Module() {
       }
     }
 
+    Function("getDisabledSigns") { GestureService.loadDisabledSigns(context); GestureService.disabledSigns.toList() }
+    Function("setSignEnabled") { gesture: String, on: Boolean -> GestureService.setSignEnabled(context, gesture, on) }
     Function("getFlickCooldown") { GestureService.flickCooldownMs(context) }
     Function("setFlickCooldown") { ms: Long -> GestureService.setFlickCooldownMs(context, ms.coerceIn(300, 2000)) }
 

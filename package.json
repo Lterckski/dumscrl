@@ -25,5 +25,6 @@
     "test:engine": "cd android && ./gradlew :dumscrl-engine:testDebugUnitTest",
     "typecheck": "tsc --noEmit"
   },
-  "private": true
+  "private": true,
+  "license": "MIT"
 }

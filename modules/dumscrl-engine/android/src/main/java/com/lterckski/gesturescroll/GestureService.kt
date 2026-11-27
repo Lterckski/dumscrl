@@ -225,7 +225,7 @@ class GestureService : LifecycleService() {
         val flick = if (mode == "flicks") flicks.feed(t, px[8], py[8], unit, flickFingers, upright) else null
         val keys = FloatArray(STILL_POINTS.size * 2) { if (it % 2 == 0) px[STILL_POINTS[it / 2]] else py[STILL_POINTS[it / 2]] }
         if (practice) Log.d("GestureScrollHand", "${shape.name} ${fingerReadout(px, py)}" + // tuning: adb logcat -s GestureScrollHand
-            if (mode == "flicks") " | speed ${"%.1f".format(flicks.speed)} wait ${(flicks.cooldownUntil - t).coerceAtLeast(0)} reverseOk=${flicks.reverseReady} flick=$flick" +
+            if (mode == "flicks") " | ${if (upright) "UP" else "SIDE"} f=$flickFingers speed ${"%.1f".format(flicks.speed)} wait ${(flicks.cooldownUntil - t).coerceAtLeast(0)} reverseOk=${flicks.reverseReady} flick=$flick" +
                 (if (flick != null) " dx=${"%.2f".format(flicks.lastDx)} dy=${"%.2f".format(flicks.lastDy)}" else "") else "")
         return flick ?: handDetector.feed(t, cx, cy, unit, shape.open, pose, keys)?.takeIf { it.name !in disabledSigns }
     }

@@ -14,13 +14,16 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.lterckski.gesturescroll"
+      "package": "com.lterckski.dumscrl"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "platforms": [
       "android"
+    ],
+    "plugins": [
+      "./plugins/withReleaseSigning"
     ]
   }
 }

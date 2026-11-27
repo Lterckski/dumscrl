@@ -1,15 +1,29 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Metal } from '../Metal';
-import { SIGNS } from '../signs';
+import type { Mode } from '../../modules/dumscrl-engine';
+import { FLICKS, SIGNS } from '../signs';
 import { Card, Page, Row, SectionLabel } from '../ui';
 import { radius, space, type, useColors } from '../theme';
 
-export function Signs({ current }: { current: string }) {
+export function Signs({ current, mode }: { current: string; mode: Mode }) {
   const c = useColors();
+  const flicks = mode === 'flicks';
+  const signs = SIGNS.filter((s) => !flicks || s.inFlicks);
   return (
-    <Page title="Signs" subtitle="Hold a sign for a moment. To repeat it, change the sign or drop your hand, then show it again.">
+    <Page title="Signs" subtitle="Hold a sign still for a moment. To repeat it, change the sign or drop your hand, then show it again.">
+      {flicks && (
+        <>
+          <SectionLabel>Flicks</SectionLabel>
+          <Card>
+            {FLICKS.map((f, i) => (
+              <Row key={f.key} first={i === 0} label={`${f.emoji}   ${f.name}`} right={<Text style={[type.headline, { color: c.secondary, fontSize: 15 }]}>{f.does}</Text>} />
+            ))}
+          </Card>
+          <SectionLabel>Signs</SectionLabel>
+        </>
+      )}
       <Card>
-        {SIGNS.map((s, i) => (
+        {signs.map((s, i) => (
           <Row
             key={s.key}
             first={i === 0}

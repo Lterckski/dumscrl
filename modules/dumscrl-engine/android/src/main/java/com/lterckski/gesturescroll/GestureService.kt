@@ -68,6 +68,8 @@ class GestureService : LifecycleService() {
             set(value) { field = value; instance?.preview?.setSurfaceProvider(value) } // main thread
         val MODES = listOf("signs", "flicks", "head", "signs+head")
         fun mode(c: Context) = c.getSharedPreferences("settings", MODE_PRIVATE).getString("mode", null).takeIf { it in MODES } ?: "signs"
+        /** Wrist, knuckles, thumb tip and fingertips: what has to hold still for a sign to fire. */
+        private val STILL_POINTS = intArrayOf(0, 5, 17, 4, 8, 12, 16, 20)
         private const val CHANNEL = "gesture"
         private const val NOTIF_ID = 1
     }
@@ -195,16 +197,19 @@ class GestureService : LifecycleService() {
         lastPoints = FloatArray(42) { if (it % 2 == 0) px[it / 2] else py[it / 2] }
         val palm = hypot(px[0] - px[9], py[0] - py[9])
         val shape = classifyHand(px, py)
-        // Flick mode keeps thumbs up as its only sign.
-        // Flicks mode: a pointing finger is for flicking, so the index-up sign is off; the other signs still work.
-        val pose = if (mode == "flicks" && shape.name == "point") null else shape.pose
+        val flickFingers = if (mode == "flicks") shape.flickFingers else null
+        // A flicking hand isn't a sign, even with the thumb loose (index + middle + thumb would count as three).
+        val pose = if (flickFingers != null) null else shape.pose.takeIf { signAllowed(mode, it) }
         val cx = (px[0] + px[5] + px[9] + px[17]) / 4
         val cy = (py[0] + py[5] + py[9] + py[17]) / 4
-        lastHand = "hand: ${shape.name} (${shape.fingers} fingers${if (shape.thumbOut) " + thumb" else ""}) palm=${palm.toInt()}px at ${cx.toInt()},${cy.toInt()}"
+        lastHand = "hand: ${when (flickFingers) { 1 -> "point"; 2 -> "peace"; else -> shape.name }} (${shape.fingers} fingers${if (shape.thumbOut) " + thumb" else ""}) palm=${palm.toInt()}px at ${cx.toInt()},${cy.toInt()}"
         // shortcut: a hand close to the lens has a huge palm, so cap the unit at 1/5 of the frame; tune on the phone.
         val unit = minOf(palm, h / 5)
-        val flick = if (mode == "flicks") flicks.feed(t, px[8], py[8], unit, shape.name == "point") else null
-        return flick ?: handDetector.feed(t, cx, cy, unit, shape.open, pose)
+        val flick = if (mode == "flicks") flicks.feed(t, px[8], py[8], unit, flickFingers) else null
+        val keys = FloatArray(STILL_POINTS.size * 2) { if (it % 2 == 0) px[STILL_POINTS[it / 2]] else py[STILL_POINTS[it / 2]] }
+        if (practice) Log.d("GestureScrollHand", "${shape.name} ${fingerReadout(px, py)}" + // tuning: adb logcat -s GestureScrollHand
+            if (mode == "flicks") " | speed ${"%.1f".format(flicks.speed)} wait ${(flicks.cooldownUntil - t).coerceAtLeast(0)} reverseOk=${flicks.reverseReady} flick=$flick" else "")
+        return flick ?: handDetector.feed(t, cx, cy, unit, shape.open, pose, keys)
     }
 
     private fun headGesture(lm: FaceLandmarker, mp: MPImage, t: Long, w: Float, h: Float): Gesture? {

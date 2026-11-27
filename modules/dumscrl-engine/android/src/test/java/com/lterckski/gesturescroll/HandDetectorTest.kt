@@ -50,4 +50,21 @@ class HandDetectorTest {
         move(300); move(1000, pose = Gesture.THUMBS_UP, open = false); move(300, open = false)
         assertEquals(listOf(Gesture.THUMBS_UP), out)
     }
+
+    @Test fun signSeenWhileTheWristTurnsDoesNotFireUntilHeldStill() {
+        // The thumb tip sweeps round as the wrist turns (as a relaxed thumb passing "thumb left" does).
+        fun turning(ms: Long, degPerFrame: Double) {
+            var a = 0.0
+            repeat((ms / 33).toInt()) {
+                a += Math.toRadians(degPerFrame)
+                val tip = floatArrayOf(x, y, x + palm * Math.cos(a).toFloat(), y + palm * Math.sin(a).toFloat())
+                d.feed(t, x, y, palm, false, Gesture.PHOTO_NEXT, tip)?.let(out::add); t += 33
+            }
+        }
+        move(300)
+        turning(900, 6.0) // ~6° a frame: never still for 0.3 s
+        assertEquals(emptyList<Gesture>(), out)
+        turning(600, 0.0) // stops and holds the sign
+        assertEquals(listOf(Gesture.PHOTO_NEXT), out)
+    }
 }

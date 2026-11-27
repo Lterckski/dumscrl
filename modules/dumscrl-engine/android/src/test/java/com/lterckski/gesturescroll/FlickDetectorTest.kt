@@ -12,24 +12,40 @@ class FlickDetectorTest {
     private val palm = 60f
     private val out = mutableListOf<Gesture>()
 
-    /** Move the fingertip by (dxPalms, dyPalms) over ms at 30 fps; zero = hold still. */
-    private fun move(ms: Long, dxPalms: Float = 0f, dyPalms: Float = 0f, pointing: Boolean = true) {
+    /** Move the fingertip by (dxPalms, dyPalms) over ms at 30 fps; zero = hold still. fingers: 1 index, 2 index + middle. */
+    private fun move(ms: Long, dxPalms: Float = 0f, dyPalms: Float = 0f, fingers: Int? = 1) {
         val steps = (ms / 33).coerceAtLeast(1)
         repeat(steps.toInt()) {
             x += dxPalms * palm / steps; y += dyPalms * palm / steps
             t += 33
-            d.feed(t, x, y, palm, pointing)?.let(out::add)
+            d.feed(t, x, y, palm, fingers)?.let(out::add)
         }
     }
 
-    @Test fun flickUpIsNextVideoDownIsPrevious() {
+    @Test fun indexFlickEitherWayIsNextVideo() {
         move(300); move(150, dyPalms = -1.5f); move(1200); move(150, dyPalms = 1.5f); move(300)
-        assertEquals(listOf(Gesture.SWIPE_UP, Gesture.SWIPE_DOWN), out)
+        assertEquals(listOf(Gesture.SWIPE_UP, Gesture.SWIPE_UP), out)
     }
 
-    @Test fun flickToUsersLeftIsNextPhotoRightIsPrevious() { // frame not mirrored: user's left = larger x
+    @Test fun indexAndMiddleFlickEitherWayIsPreviousVideo() {
+        move(300, fingers = 2); move(150, dyPalms = 1.5f, fingers = 2); move(1200, fingers = 2); move(150, dyPalms = -1.5f, fingers = 2)
+        assertEquals(listOf(Gesture.SWIPE_DOWN, Gesture.SWIPE_DOWN), out)
+    }
+
+    @Test fun oneBlurredFrameDoesNotChangeWhichFingers() {
+        move(300, fingers = 2)
+        repeat(5) { move(33, dyPalms = -0.3f, fingers = if (it == 2) 1 else 2) }
+        assertEquals(listOf(Gesture.SWIPE_DOWN), out)
+    }
+
+    @Test fun indexSidewaysFlipsPhotos() { // frame not mirrored: user's left = larger x
         move(300); move(150, dxPalms = 1.5f); move(1200); move(150, dxPalms = -1.5f); move(300)
         assertEquals(listOf(Gesture.PHOTO_NEXT, Gesture.PHOTO_PREV), out)
+    }
+
+    @Test fun twoFingersSidewaysDoNothing() {
+        move(300, fingers = 2); move(150, dxPalms = 1.5f, fingers = 2); move(300, fingers = 2)
+        assertEquals(emptyList<Gesture>(), out)
     }
 
     @Test fun slowMoveIsNotAFlick() {
@@ -37,8 +53,8 @@ class FlickDetectorTest {
         assertEquals(emptyList<Gesture>(), out)
     }
 
-    @Test fun onlyAPointingFingerFlicks() {
-        move(300, pointing = false); move(150, dyPalms = -1.5f, pointing = false); move(300, pointing = false)
+    @Test fun otherHandShapesDoNotFlick() {
+        move(300, fingers = null); move(150, dyPalms = -1.5f, fingers = null); move(300, fingers = null)
         assertEquals(emptyList<Gesture>(), out)
     }
 
@@ -47,22 +63,24 @@ class FlickDetectorTest {
         assertEquals(listOf(Gesture.SWIPE_UP), out)
     }
 
-    @Test fun sameDirectionFiresAgainAfterCooldown() {
+    @Test fun sameWayFiresAgainAfterCooldown() {
         move(300); move(150, dyPalms = -1.5f); move(400, dyPalms = 1.5f); move(700); move(150, dyPalms = -1.5f)
         assertEquals(listOf(Gesture.SWIPE_UP, Gesture.SWIPE_UP), out)
     }
 
-    @Test fun fingerComingBackAfterCooldownIsNotAReverseFlick() {
-        // Flick up, keep moving until the cooldown ends, then snap back down without ever resting.
+    @Test fun fingerComingBackWithoutRestingIsNotASecondFlick() {
+        // Flick up, keep moving until the wait ends, then snap back down without ever resting.
         move(300); move(150, dyPalms = -1.5f)
         repeat(8) { move(66, dxPalms = 0.3f); move(66, dxPalms = -0.3f) } // ~1 s of wiggling, never still
         move(150, dyPalms = 1.5f)
         assertEquals(listOf(Gesture.SWIPE_UP), out)
     }
 
-    @Test fun reverseFlickCountsOnceTheFingerHasRested() {
-        move(300); move(150, dyPalms = -1.5f); move(1100); move(150, dyPalms = 1.5f)
-        assertEquals(listOf(Gesture.SWIPE_UP, Gesture.SWIPE_DOWN), out)
+    @Test fun jitterCountsAsResting() {
+        move(300); move(150, dyPalms = -1.5f)
+        repeat(30) { move(33, dyPalms = if (it % 2 == 0) 0.03f else -0.03f) } // ~1 palm/s frame to frame, still in place
+        move(150, dyPalms = 1.5f)
+        assertEquals(listOf(Gesture.SWIPE_UP, Gesture.SWIPE_UP), out)
     }
 
     @Test fun cooldownIsAdjustableLive() {

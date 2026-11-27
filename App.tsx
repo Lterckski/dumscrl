@@ -45,7 +45,7 @@ export default function App() {
         <Animated.View style={page}>
           {tab === 'home' && <Home engine={engine} />}
           {tab === 'camera' && <Camera engine={engine} />}
-          {tab === 'signs' && <Signs current={engine.state.running ? engine.state.sign : ''} />}
+          {tab === 'signs' && <Signs current={engine.state.running ? engine.state.sign : ''} mode={engine.state.mode} />}
           {tab === 'settings' && <Settings engine={engine} />}
         </Animated.View>
         <TabBar tab={tab} onChange={go} />

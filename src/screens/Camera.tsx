@@ -77,8 +77,10 @@ export function Camera({ engine }: { engine: EngineApi }) {
               {state.status.startsWith('Test: ')
                 ? `Would do: ${state.status.slice(6)}`
                 : flicks && state.sign === 'point'
-                  ? 'Flick up or down to scroll, left or right for photos'
-                  : seen?.does ? `Does: ${seen.does}` : 'Practice mode'}
+                  ? 'Flick up or down: next video. Left or right: photos'
+                  : flicks && state.sign === 'peace'
+                    ? 'Flick up or down: previous video'
+                    : seen?.does && (!flicks || seen.inFlicks) ? `Does: ${seen.does}` : 'Practice mode'}
             </Text>
             {flicks && <FlickReadout />}
           </View>
@@ -100,7 +102,7 @@ function useFlickMeter() {
 }
 
 const ARROWS = { up: 'arrow-up', down: 'arrow-down', left: 'arrow-back', right: 'arrow-forward' } as const;
-// The engine names the action; the preview is mirrored like a selfie, so these are the directions the user sees.
+// The arrow shows which way the feed moves (videos: up = next), not the finger: either finger direction scrolls.
 const flickDirection = (action: string): keyof typeof ARROWS =>
   action === 'Next video' ? 'up' : action === 'Previous video' ? 'down' : action.startsWith('Next photo') ? 'left' : 'right';
 

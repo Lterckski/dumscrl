@@ -15,15 +15,15 @@ dumscrl is an Android app for scrolling while your hands are busy (or greasy, be
 | Sign | | Does |
 | --- | --- | --- |
 | Index finger up | ☝️ | Next video |
-| Peace | ✌️ | Previous video |
+| Peace, thumb tucked | ✌️ | Previous video |
 | Thumbs up | 👍 | Like |
 | Thumb out to your left | 👈 | Next photo |
 | Pinky out sideways | 🤙 | Previous photo |
-| Three fingers | 🤟 | Next app |
-| Four fingers, thumb tucked | 🖖 | Previous app |
+| Any three fingers (thumb counts) | 🤟 | Next app |
+| Any four fingers (thumb counts) | 🖖 | Previous app |
 | Open palm, hold 2 s | ✋ | Pause or resume |
 
-- A sign fires once you've held it for about 1/3 second. To fire the same sign again, lower your hand or change to another sign first.
+- A sign fires once you've held it still for about 1/3 second; a sign your hand only passes through while turning doesn't count. To fire the same sign again, lower your hand or change to another sign first.
 - "Next app" and "Previous app" cycle through Facebook, Instagram and TikTok, whichever of them are installed.
 - **The Camera tab is a practice area.** It shows what the camera sees, the tracked hand and the sign it reads ("Would do: Next video"), but it never acts on the phone.
 - **Real control** starts only when you tap **Start** on Home and then switch to another app. While the Camera tab is open, signs don't act on anything, even with Start on.
@@ -38,19 +38,20 @@ Functionality first, and Android only.
 
 ## Flicks mode
 
-Pick **Flicks** in Settings. Point your index finger with the other fingers curled, then flick it:
+Pick **Flicks** in Settings. The modes don't overlap: you use one or the other. The thumb doesn't matter in any flick.
 
 | Flick | Does |
 | --- | --- |
-| Up | Next video |
-| Down | Previous video |
-| To your left | Next photo |
-| To your right | Previous photo |
+| Index finger, up or down | Next video |
+| Index and middle finger, up or down | Previous video |
+| Index finger, to your left | Next photo |
+| Index finger, to your right | Previous photo |
 
+- For videos, the fingers decide the action, not the direction, so either direction works.
 - A flick is the fingertip moving at least 4 palm-lengths a second (and at least 0.6 of a palm), so it works at any distance from the camera.
 - After each flick, every flick is ignored for a while: 1.0 s by default, adjustable from 0.3 to 2.0 s in Settings.
-- Bringing your finger back never counts as the opposite flick. The opposite direction only counts again after the finger has rested for about 0.15 s.
-- The index-up sign is off in this mode (pointing is how you flick), but every other sign and the palm-hold pause still work.
+- Bringing your finger back doesn't count as another flick until the finger has rested for about 0.15 s.
+- Signs that flicks already cover (index up, peace, thumb left, pinky) are off in this mode. Thumbs up, three, four and the palm-hold pause still work.
 - On the Camera tab, flicks show an arrow, "Would do: …", your fingertip speed against the threshold, and the wait left before the next flick counts.
 
 ## Stack

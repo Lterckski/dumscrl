@@ -17,6 +17,7 @@ class HandPoseTest {
             "up" -> { p[3] = -50f to -120f; p[4] = -50f to -200f }
             "right" -> { p[3] = -100f to -55f; p[4] = -170f to -60f }
             "left" -> { p[3] = 10f to -55f; p[4] = 70f to -60f }
+            "bent left" -> { p[3] = -10f to -90f; p[4] = 40f to -80f } // relaxed, curled over the fist
             else -> { p[3] = -20f to -80f; p[4] = 10f to -90f }
         }
         listOf(index, middle, ring, pinky).forEachIndexed { i, ext ->
@@ -61,5 +62,41 @@ class HandPoseTest {
     @Test fun fingerCountsSurviveATurnedHand() {
         assertEquals(Gesture.SWIPE_DOWN, hand(true, true, false, false, turnDeg = 40.0).pose)
         assertEquals(Gesture.SWIPE_LEFT, hand(true, true, true, false, turnDeg = -50.0).pose)
+    }
+
+    @Test fun relaxedThumbCurledSidewaysIsNotThumbLeft() {
+        assertEquals(null, hand(false, false, false, false, thumb = "bent left").pose)
+    }
+
+    @Test fun modesDontShareSigns() {
+        for (g in Gesture.values()) assertEquals(true, signAllowed("signs", g))
+        assertEquals(listOf(Gesture.SWIPE_LEFT, Gesture.SWIPE_RIGHT, Gesture.THUMBS_UP),
+            listOf(Gesture.SWIPE_UP, Gesture.SWIPE_DOWN, Gesture.SWIPE_LEFT, Gesture.SWIPE_RIGHT, Gesture.THUMBS_UP, Gesture.PHOTO_NEXT, Gesture.PHOTO_PREV)
+                .filter { signAllowed("flicks", it) })
+    }
+
+    @Test fun anyThreeOrFourRaisedFingersCountThumbIncluded() {
+        // thumb, index, middle, ring, pinky
+        for (mask in 0 until 32) {
+            val f = List(5) { mask shr it and 1 == 1 }
+            val n = f.count { it }
+            if (n != 3 && n != 4) continue
+            val shape = hand(f[1], f[2], f[3], f[4], thumb = if (f[0]) "out" else "tucked")
+            assertEquals("fingers $f", if (n == 3) Gesture.SWIPE_LEFT else Gesture.SWIPE_RIGHT, shape.pose)
+        }
+    }
+
+    @Test fun peaceNeedsTheThumbTuckedAndAllFiveIsOpenPalm() {
+        assertEquals(Gesture.SWIPE_DOWN, hand(true, true, false, false).pose)
+        assertEquals(Gesture.SWIPE_LEFT, hand(true, true, false, false, thumb = "out").pose) // thumb raised = three
+        assertEquals("open palm", hand(true, true, true, true, thumb = "out").name)
+    }
+
+    @Test fun flickPosesIgnoreTheThumb() {
+        assertEquals(1, hand(true, false, false, false).flickFingers)
+        assertEquals(1, hand(true, false, false, false, thumb = "out").flickFingers)
+        assertEquals(2, hand(true, true, false, false).flickFingers)
+        assertEquals(2, hand(true, true, false, false, thumb = "out").flickFingers)
+        assertEquals(null, hand(true, true, true, false).flickFingers)
     }
 }

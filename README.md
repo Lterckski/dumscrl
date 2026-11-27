@@ -73,6 +73,8 @@ Pick **Flicks** in Settings. The modes don't overlap: you use one or the other. 
 
 Coming from an older build named `com.lterckski.gesturescroll`? It's a different app id, so uninstall the old one first; your settings start fresh.
 
+**Wallet and banking apps.** Some e-wallet and banking apps refuse to open, or show a security warning, while any app has accessibility access, because that access could read or tap their screens. dumscrl only uses it to swipe and tap in the feed apps, but those apps can't tell. Before opening one, tap **Turn off** next to Phone control on dumscrl's Home screen and switch dumscrl off in Accessibility; switch it back on afterwards.
+
 ## Requirements
 
 - Node 24 and npm

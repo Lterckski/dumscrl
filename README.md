@@ -41,18 +41,18 @@ Functionality first, and Android only.
 
 Pick **Flicks** in Settings. The modes don't overlap: you use one or the other. The thumb doesn't matter in any flick.
 
-| Flick | Does |
-| --- | --- |
-| Index finger, up or down | Next video |
-| Index and middle finger, up or down | Previous video |
-| Index finger, sideways | Next photo |
-| Index and middle finger, sideways | Previous photo |
+| Hand | Fingers | Flick | Does |
+| --- | --- | --- | --- |
+| Fingers up | Index | up or down | Next video |
+| Fingers up | Index and middle | up or down | Previous video |
+| Sideways | Index | sideways | Next photo |
+| Sideways | Index and middle | sideways | Previous photo |
 
-- The fingers decide the action, not the direction, so either direction works. A sideways snap that also moves up a little still counts as sideways.
+- The hand's direction decides the kind: with the fingers up only up/down movement counts, with the hand sideways only sideways movement. The fingers decide next or previous; the flick's direction doesn't matter.
 - A flick is the fingertip moving at least 4 palm-lengths a second (and at least 0.6 of a palm), so it works at any distance from the camera.
 - After each flick, every flick is ignored for a while: 0.6 s by default, adjustable from 0.3 to 2.0 s in Settings.
 - Bringing your finger back doesn't count as another flick until the finger has rested for about 0.15 s.
-- Signs that flicks already cover (index up, peace, thumb left, pinky) are off in this mode. Thumbs up, three, four and the palm-hold pause still work.
+- Signs that flicks already cover (index up, peace, thumb left, pinky) are off in this mode. Thumbs up, three, four and the palm-hold pause still work, with the fingers up only (a sideways hand is for photos).
 - On the Camera tab, flicks show an arrow, "Would do: …", your fingertip speed against the threshold, and the wait left before the next flick counts.
 
 ## Stack

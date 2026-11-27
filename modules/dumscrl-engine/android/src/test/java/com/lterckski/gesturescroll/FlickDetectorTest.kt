@@ -13,12 +13,12 @@ class FlickDetectorTest {
     private val out = mutableListOf<Gesture>()
 
     /** Move the fingertip by (dxPalms, dyPalms) over ms at 30 fps; zero = hold still. fingers: 1 index, 2 index + middle. */
-    private fun move(ms: Long, dxPalms: Float = 0f, dyPalms: Float = 0f, fingers: Int? = 1) {
+    private fun move(ms: Long, dxPalms: Float = 0f, dyPalms: Float = 0f, fingers: Int? = 1, upright: Boolean = true) {
         val steps = (ms / 33).coerceAtLeast(1)
         repeat(steps.toInt()) {
             x += dxPalms * palm / steps; y += dyPalms * palm / steps
             t += 33
-            d.feed(t, x, y, palm, fingers)?.let(out::add)
+            d.feed(t, x, y, palm, fingers, upright)?.let(out::add)
         }
     }
 
@@ -39,24 +39,26 @@ class FlickDetectorTest {
         assertEquals(listOf(Gesture.SWIPE_DOWN), out)
     }
 
-    @Test fun indexSidewaysEitherWayIsNextPhoto() {
-        move(300); move(150, dxPalms = 1.5f); move(1200); move(150, dxPalms = -1.5f); move(300)
+    @Test fun sidewaysHandIndexEitherWayIsNextPhoto() {
+        move(300, upright = false); move(150, dxPalms = 1.5f, upright = false); move(1200, upright = false); move(150, dxPalms = -1.5f, upright = false)
         assertEquals(listOf(Gesture.PHOTO_NEXT, Gesture.PHOTO_NEXT), out)
     }
 
-    @Test fun twoFingersSidewaysEitherWayIsPreviousPhoto() {
-        move(300, fingers = 2); move(150, dxPalms = 1.5f, fingers = 2); move(1200, fingers = 2); move(150, dxPalms = -1.5f, fingers = 2)
-        assertEquals(listOf(Gesture.PHOTO_PREV, Gesture.PHOTO_PREV), out)
+    @Test fun sidewaysHandTwoFingersIsPreviousPhoto() {
+        move(300, fingers = 2, upright = false); move(150, dxPalms = -1.5f, fingers = 2, upright = false)
+        assertEquals(listOf(Gesture.PHOTO_PREV), out)
     }
 
-    @Test fun sidewaysSnapThatArcsUpIsStillSideways() {
-        move(300); move(150, dxPalms = 1.2f, dyPalms = -1.4f)
-        assertEquals(listOf(Gesture.PHOTO_NEXT), out)
-    }
-
-    @Test fun mostlyVerticalStaysVertical() {
-        move(300); move(150, dxPalms = 0.5f, dyPalms = -1.5f)
+    @Test fun uprightHandOnlyCountsUpAndDown() {
+        move(300); move(150, dxPalms = 1.5f); move(300) // sideways move with fingers up: nothing
+        move(150, dxPalms = 1.2f, dyPalms = -1.4f) // diagonal snap: its vertical part is a video flick
         assertEquals(listOf(Gesture.SWIPE_UP), out)
+    }
+
+    @Test fun sidewaysHandOnlyCountsSideways() {
+        move(300, upright = false); move(150, dyPalms = -1.5f, upright = false); move(300, upright = false)
+        move(150, dxPalms = 1.2f, dyPalms = -1.4f, upright = false)
+        assertEquals(listOf(Gesture.PHOTO_NEXT), out)
     }
 
     @Test fun slowMoveIsNotAFlick() {

@@ -14,12 +14,15 @@ export const SIGNS = [
   { key: 'open palm', gesture: 'TOGGLE', emoji: '✋', name: 'Open palm, hold 2 s', does: 'Pause or resume', inFlicks: true },
 ] as const;
 
-/** Flicks mode: which fingers you flick decides the action, not the direction. The thumb doesn't matter. */
+/**
+ * Flicks mode: the hand's direction picks videos (fingers up, flick up/down) or photos (hand sideways, flick
+ * sideways); the fingers pick next or previous. Flick direction and thumb don't matter.
+ */
 export const FLICKS = [
-  { key: 'index', emoji: '☝️', name: 'Index, flick up or down', does: 'Next video' },
-  { key: 'two', emoji: '✌️', name: 'Index + middle, flick up or down', does: 'Previous video' },
-  { key: 'index side', emoji: '👉', name: 'Index, flick sideways', does: 'Next photo' },
-  { key: 'two side', emoji: '✌️', name: 'Index + middle, flick sideways', does: 'Previous photo' },
+  { key: 'index', emoji: '☝️', name: 'Index up, flick', does: 'Next video' },
+  { key: 'two', emoji: '✌️', name: 'Index + middle up, flick', does: 'Previous video' },
+  { key: 'index side', emoji: '👉', name: 'Index sideways, flick', does: 'Next photo' },
+  { key: 'two side', emoji: '🫱', name: 'Index + middle sideways, flick', does: 'Previous photo' },
 ] as const;
 
 // Shapes the engine reports that don't do anything, so they stay out of the Signs guide.

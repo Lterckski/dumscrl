@@ -29,6 +29,7 @@ import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.facelandmarker.FaceLandmarker
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarker
 import java.util.concurrent.Executors
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
 
@@ -210,14 +211,18 @@ class GestureService : LifecycleService() {
         val palm = hypot(px[0] - px[9], py[0] - py[9])
         val shape = classifyHand(px, py)
         val flickFingers = if (mode == "flicks") shape.flickFingers else null
+        // Fingers up vs hand sideways, from wrist to middle knuckle (image y grows downward).
+        val upright = abs(py[9] - py[0]) > abs(px[9] - px[0])
         // A flicking hand isn't a sign, even with the thumb loose (index + middle + thumb would count as three).
-        val pose = if (flickFingers != null) null else shape.pose?.takeIf { signAllowed(mode, it) && it.name !in disabledSigns }
+        // In flicks mode a sideways hand is for flipping photos only, so no signs then (it misread as three/four).
+        val pose = if (flickFingers != null || (mode == "flicks" && !upright)) null
+            else shape.pose?.takeIf { signAllowed(mode, it) && it.name !in disabledSigns }
         val cx = (px[0] + px[5] + px[9] + px[17]) / 4
         val cy = (py[0] + py[5] + py[9] + py[17]) / 4
         lastHand = "hand: ${when (flickFingers) { 1 -> "point"; 2 -> "peace"; else -> shape.name }} (${shape.fingers} fingers${if (shape.thumbOut) " + thumb" else ""}) palm=${palm.toInt()}px at ${cx.toInt()},${cy.toInt()}"
         // shortcut: a hand close to the lens has a huge palm, so cap the unit at 1/5 of the frame; tune on the phone.
         val unit = minOf(palm, h / 5)
-        val flick = if (mode == "flicks") flicks.feed(t, px[8], py[8], unit, flickFingers) else null
+        val flick = if (mode == "flicks") flicks.feed(t, px[8], py[8], unit, flickFingers, upright) else null
         val keys = FloatArray(STILL_POINTS.size * 2) { if (it % 2 == 0) px[STILL_POINTS[it / 2]] else py[STILL_POINTS[it / 2]] }
         if (practice) Log.d("GestureScrollHand", "${shape.name} ${fingerReadout(px, py)}" + // tuning: adb logcat -s GestureScrollHand
             if (mode == "flicks") " | speed ${"%.1f".format(flicks.speed)} wait ${(flicks.cooldownUntil - t).coerceAtLeast(0)} reverseOk=${flicks.reverseReady} flick=$flick" +

@@ -58,8 +58,8 @@ export function Home({ engine }: { engine: EngineApi }) {
         />
         <Row
           label="Phone control"
-          detail="Lets dumscrl swipe and tap for you."
-          right={state.phoneControl ? <Ok /> : <Action label="Turn on" onPress={openPhoneControl} />}
+          detail={state.phoneControl ? "On. Turn off opens Accessibility; tap dumscrl there." : "Lets dumscrl swipe and tap for you."}
+          right={<Action label={state.phoneControl ? 'Turn off' : 'Turn on'} onPress={openPhoneControl} />}
         />
       </Card>
     </Page>

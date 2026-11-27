@@ -77,9 +77,9 @@ export function Camera({ engine }: { engine: EngineApi }) {
               {state.status.startsWith('Test: ')
                 ? `Would do: ${state.status.slice(6)}`
                 : flicks && state.sign === 'point'
-                  ? 'Flick up or down: next video. Left or right: photos'
+                  ? 'Flick up or down: next video. Sideways: next photo'
                   : flicks && state.sign === 'peace'
-                    ? 'Flick up or down: previous video'
+                    ? 'Flick up or down: previous video. Sideways: previous photo'
                     : seen?.does && (!flicks || seen.inFlicks) ? `Does: ${seen.does}` : 'Practice mode'}
             </Text>
             {flicks && <FlickReadout />}

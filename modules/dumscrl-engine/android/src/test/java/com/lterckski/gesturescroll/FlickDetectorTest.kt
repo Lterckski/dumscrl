@@ -39,14 +39,24 @@ class FlickDetectorTest {
         assertEquals(listOf(Gesture.SWIPE_DOWN), out)
     }
 
-    @Test fun indexSidewaysFlipsPhotos() { // frame not mirrored: user's left = larger x
+    @Test fun indexSidewaysEitherWayIsNextPhoto() {
         move(300); move(150, dxPalms = 1.5f); move(1200); move(150, dxPalms = -1.5f); move(300)
-        assertEquals(listOf(Gesture.PHOTO_NEXT, Gesture.PHOTO_PREV), out)
+        assertEquals(listOf(Gesture.PHOTO_NEXT, Gesture.PHOTO_NEXT), out)
     }
 
-    @Test fun twoFingersSidewaysDoNothing() {
-        move(300, fingers = 2); move(150, dxPalms = 1.5f, fingers = 2); move(300, fingers = 2)
-        assertEquals(emptyList<Gesture>(), out)
+    @Test fun twoFingersSidewaysEitherWayIsPreviousPhoto() {
+        move(300, fingers = 2); move(150, dxPalms = 1.5f, fingers = 2); move(1200, fingers = 2); move(150, dxPalms = -1.5f, fingers = 2)
+        assertEquals(listOf(Gesture.PHOTO_PREV, Gesture.PHOTO_PREV), out)
+    }
+
+    @Test fun sidewaysSnapThatArcsUpIsStillSideways() {
+        move(300); move(150, dxPalms = 1.2f, dyPalms = -1.4f)
+        assertEquals(listOf(Gesture.PHOTO_NEXT), out)
+    }
+
+    @Test fun mostlyVerticalStaysVertical() {
+        move(300); move(150, dxPalms = 0.5f, dyPalms = -1.5f)
+        assertEquals(listOf(Gesture.SWIPE_UP), out)
     }
 
     @Test fun slowMoveIsNotAFlick() {

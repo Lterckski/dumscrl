@@ -32,7 +32,7 @@ export function Settings({ engine }: { engine: EngineApi }) {
           <Row first label="Hand signs" detail="Hold up a sign to scroll, like or flip photos." right={state.mode === 'signs' ? <Ionicons name="checkmark" size={22} color={c.accent} /> : null} />
         </Press>
         <Press onPress={() => setMode('flicks')} scaleTo={0.98} accessibilityRole="radio" accessibilityState={{ checked: state.mode === 'flicks' }}>
-          <Row label="Flicks" detail="Flick your index finger for the next video, index and middle for the previous one, sideways for photos. Like, three, four and the palm pause stay as signs." right={state.mode === 'flicks' ? <Ionicons name="checkmark" size={22} color={c.accent} /> : null} />
+          <Row label="Flicks" detail="Flick your index finger for the next video or photo (up/down or sideways), index and middle for the previous one. Like, three, four and the palm pause stay as signs." right={state.mode === 'flicks' ? <Ionicons name="checkmark" size={22} color={c.accent} /> : null} />
         </Press>
       </Card>
 

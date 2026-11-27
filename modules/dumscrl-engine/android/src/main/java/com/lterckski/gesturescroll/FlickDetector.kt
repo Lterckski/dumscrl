@@ -5,8 +5,8 @@ import kotlin.math.hypot
 
 /**
  * Flicks mode: a quick flick of the index finger, or of index and middle together; the thumb doesn't matter.
- * Up or down, the fingers pick the action: index = next video, index + middle = previous video.
- * Sideways, index only: to the user's left = next photo, right = previous photo.
+ * The fingers pick the action, either direction: up or down, index = next video, index + middle = previous video;
+ * sideways, index = next photo, index + middle = previous photo.
  *
  * Feed the index fingertip (landmark 8) in image pixels; the frame isn't mirrored, so the user's left is
  * larger x. Speeds are in palms per second, so distance from the camera doesn't matter.
@@ -22,6 +22,9 @@ class FlickDetector(
     private val gapMs: Long = 300,
     private val poseMs: Long = 400,
     private val minPoseFrames: Int = 3,
+    // A sideways snap of an upright finger also moves the tip up or down, so sideways wins unless the move is
+    // clearly vertical. Tune from the logged dx/dy.
+    private val sidewaysBias: Float = 0.75f,
 ) {
     private class Sample(val t: Long, val x: Float, val y: Float, val fingers: Int?)
 
@@ -31,6 +34,11 @@ class FlickDetector(
     @Volatile var cooldownUntil = 0L
         private set
     var lastFlick: Gesture? = null
+        private set
+    /** The last flick's move in palms (image axes), for the tuning log. */
+    var lastDx = 0f
+        private set
+    var lastDy = 0f
         private set
 
     private val samples = ArrayDeque<Sample>()
@@ -69,14 +77,15 @@ class FlickDetector(
         if (t < cooldownUntil || span < minSpanMs || speed < minSpeed || travel < minTravelPalms) return null
 
         // The way the finger moved; bringing it back is the opposite move and only counts after a rest.
-        val move = if (abs(dy) >= abs(dx)) (if (dy < 0) UP else DOWN) else (if (dx > 0) LEFT else RIGHT)
+        val move = if (abs(dx) < abs(dy) * sidewaysBias) (if (dy < 0) UP else DOWN) else (if (dx > 0) LEFT else RIGHT)
         if (!reverseArmed && move == opposite(lastMove)) return null
         if (poses.size < minPoseFrames) return null // no pointing hand just now: a fist or open hand moving
         val two = poses.count { it.second == 2 } * 2 > poses.size
         val g = when (move) {
             UP, DOWN -> if (two) Gesture.SWIPE_DOWN else Gesture.SWIPE_UP
-            else -> if (two) return null else if (move == LEFT) Gesture.PHOTO_NEXT else Gesture.PHOTO_PREV
+            else -> if (two) Gesture.PHOTO_PREV else Gesture.PHOTO_NEXT
         }
+        lastDx = dx; lastDy = dy
         samples.clear(); samples.addLast(Sample(t, nx, ny, fingers))
         cooldownUntil = t + cooldownMs
         lastFlick = g; lastMove = move; reverseArmed = false; stillSince = -1

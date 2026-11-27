@@ -93,10 +93,19 @@ class HandPoseTest {
     }
 
     @Test fun flickPosesIgnoreTheThumb() {
-        assertEquals(1, hand(true, false, false, false).flickFingers)
-        assertEquals(1, hand(true, false, false, false, thumb = "out").flickFingers)
-        assertEquals(2, hand(true, true, false, false).flickFingers)
-        assertEquals(2, hand(true, true, false, false, thumb = "out").flickFingers)
-        assertEquals(null, hand(true, true, true, false).flickFingers)
+        assertEquals(1, hand(true, false, false, false).flickFingers(false))
+        assertEquals(1, hand(true, false, false, false, thumb = "out").flickFingers(false))
+        assertEquals(2, hand(true, true, false, false).flickFingers(false))
+        assertEquals(2, hand(true, true, false, false, thumb = "out").flickFingers(false))
+        assertEquals(null, hand(true, true, true, false).flickFingers(false))
+    }
+
+    @Test fun sidewaysFlickPosesIgnoreHiddenRingAndPinky() {
+        // Ring and pinky misread as straight behind the other two.
+        assertEquals(2, hand(true, true, true, true).flickFingers(true))
+        assertEquals(2, hand(true, true, true, false).flickFingers(true))
+        assertEquals(1, hand(true, false, false, true).flickFingers(true))
+        assertEquals(1, hand(true, false, false, false).flickFingers(true))
+        assertEquals(null, hand(false, true, true, false).flickFingers(true)) // no index, no flick
     }
 }

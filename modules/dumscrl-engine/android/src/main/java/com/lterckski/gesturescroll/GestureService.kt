@@ -212,10 +212,10 @@ class GestureService : LifecycleService() {
         lastPoints = FloatArray(42) { if (it % 2 == 0) px[it / 2] else py[it / 2] }
         val palm = hypot(px[0] - px[9], py[0] - py[9])
         val shape = classifyHand(px, py)
-        val flickFingers = if (mode == "flicks") shape.flickFingers else null
         // Which way the index finger points, knuckle to tip (image y grows downward). Not the wrist: with the forearm
         // up and the hand turned thumb-up, the wrist line points up while the finger points sideways.
         val upright = abs(py[8] - py[5]) > abs(px[8] - px[5])
+        val flickFingers = if (mode == "flicks") shape.flickFingers(sideways = !upright) else null
         if (flickFingers != null) lastFlickPoseAt = t
         // In flicks mode, no signs while flicking: between flicks the resting hand reads as thumbs up or three/four.
         val pose = if (flickFingers != null || (mode == "flicks" && t - lastFlickPoseAt < FLICK_SIGN_PAUSE_MS)) null

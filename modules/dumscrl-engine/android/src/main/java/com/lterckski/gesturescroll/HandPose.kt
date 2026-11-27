@@ -6,10 +6,16 @@ import kotlin.math.hypot
 
 /** What one frame's hand looks like. fingers = index..pinky extended; thumb counted separately. */
 data class HandShape(val fingers: Int, val thumbOut: Boolean, val open: Boolean, val pose: Gesture?, val name: String, val up: List<Boolean> = emptyList()) {
-    /** Flicks mode's finger poses, thumb ignored: 1 = index only, 2 = index and middle, else null. */
-    val flickFingers: Int? get() = when (up) {
-        listOf(true, false, false, false) -> 1
-        listOf(true, true, false, false) -> 2
+    /**
+     * Flicks mode's finger poses, thumb ignored: 1 = index only, 2 = index and middle, else null.
+     * sideways: the index points sideways. Then ring and pinky hide behind the other two and the tracker often
+     * guesses them straight, so only index and middle are read.
+     */
+    fun flickFingers(sideways: Boolean): Int? = when {
+        up.size != 4 || !up[0] -> null
+        sideways -> if (up[1]) 2 else 1
+        up == listOf(true, false, false, false) -> 1
+        up == listOf(true, true, false, false) -> 2
         else -> null
     }
 }

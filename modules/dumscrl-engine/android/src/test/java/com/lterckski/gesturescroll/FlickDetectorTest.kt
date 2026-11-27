@@ -116,4 +116,17 @@ class FlickDetectorTest {
         move(300); move(600, fingers = null); move(150, dyPalms = -1.5f, fingers = null)
         assertEquals(emptyList<Gesture>(), out)
     }
+
+    @Test fun fingersSwingingUpMidFlickStillFlipsPhotos() {
+        // Seen on the phone: two fingers flicked right turn upright for ~7 frames; the move is clearly sideways.
+        move(300, fingers = 2, upright = false)
+        move(200, fingers = 2, upright = true) // fingers swing up: about 60% of recent frames read upright
+        move(100, dxPalms = -1.2f, dyPalms = 0.4f, fingers = 2, upright = true)
+        assertEquals(listOf(Gesture.PHOTO_PREV), out)
+    }
+
+    @Test fun mixedHandWithDiagonalMoveUsesTheMajority() {
+        move(300, upright = false); repeat(4) { move(33, dxPalms = 0.3f, dyPalms = -0.3f, upright = it % 2 == 0) }
+        assertEquals(1, out.size)
+    }
 }

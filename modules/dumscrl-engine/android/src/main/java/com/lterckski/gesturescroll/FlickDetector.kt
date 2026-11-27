@@ -72,7 +72,17 @@ class FlickDetector(
         val first = samples.first()
         val span = t - first.t
         val dx = nx - first.x; val dy = ny - first.y
-        val upright = poses.count { it.upright } * 2 >= poses.size
+        // Mostly the hand's direction decides. Mid-flick the fingers can swing round (a two-finger flick to the
+        // right turns them up for a few frames), so when the frames disagree, a clearly sideways or vertical
+        // movement settles it.
+        val upShare = if (poses.isEmpty()) 1f else poses.count { it.upright }.toFloat() / poses.size
+        val upright = when {
+            upShare >= 0.7f -> true
+            upShare <= 0.3f -> false
+            abs(dx) >= abs(dy) * 1.5f -> false
+            abs(dy) >= abs(dx) * 1.5f -> true
+            else -> upShare >= 0.5f
+        }
         val along = if (upright) dy else dx // only movement along the hand's own axis counts
         val travel = abs(along)
         speed = if (span > 0) travel * 1000 / span else 0f

@@ -81,6 +81,7 @@ class GestureService : LifecycleService() {
         val MODES = listOf("signs", "flicks", "head", "signs+head")
         fun mode(c: Context) = c.getSharedPreferences("settings", MODE_PRIVATE).getString("mode", null).takeIf { it in MODES } ?: "signs"
         /** Wrist, knuckles, thumb tip and fingertips: what has to hold still for a sign to fire. */
+        private const val FLICK_SIGN_PAUSE_MS = 1500L
         private val STILL_POINTS = intArrayOf(0, 5, 17, 4, 8, 12, 16, 20)
         private const val CHANNEL = "gesture"
         private const val NOTIF_ID = 1
@@ -92,6 +93,7 @@ class GestureService : LifecycleService() {
     private val handDetector = HandDetector()
     private val flicks by lazy { FlickDetector(cooldownMs = flickCooldownMs(this)) }
     private var meterAt = 0L
+    private var lastFlickPoseAt = -FLICK_SIGN_PAUSE_MS
     private var faces: FaceLandmarker? = null
     private var hands: HandLandmarker? = null
     @Volatile private var paused = false
@@ -211,11 +213,12 @@ class GestureService : LifecycleService() {
         val palm = hypot(px[0] - px[9], py[0] - py[9])
         val shape = classifyHand(px, py)
         val flickFingers = if (mode == "flicks") shape.flickFingers else null
-        // Fingers up vs hand sideways, from wrist to middle knuckle (image y grows downward).
-        val upright = abs(py[9] - py[0]) > abs(px[9] - px[0])
-        // A flicking hand isn't a sign, even with the thumb loose (index + middle + thumb would count as three).
-        // In flicks mode a sideways hand is for flipping photos only, so no signs then (it misread as three/four).
-        val pose = if (flickFingers != null || (mode == "flicks" && !upright)) null
+        // Which way the index finger points, knuckle to tip (image y grows downward). Not the wrist: with the forearm
+        // up and the hand turned thumb-up, the wrist line points up while the finger points sideways.
+        val upright = abs(py[8] - py[5]) > abs(px[8] - px[5])
+        if (flickFingers != null) lastFlickPoseAt = t
+        // In flicks mode, no signs while flicking: between flicks the resting hand reads as thumbs up or three/four.
+        val pose = if (flickFingers != null || (mode == "flicks" && t - lastFlickPoseAt < FLICK_SIGN_PAUSE_MS)) null
             else shape.pose?.takeIf { signAllowed(mode, it) && it.name !in disabledSigns }
         val cx = (px[0] + px[5] + px[9] + px[17]) / 4
         val cy = (py[0] + py[5] + py[9] + py[17]) / 4

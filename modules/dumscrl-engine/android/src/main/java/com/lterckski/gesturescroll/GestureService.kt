@@ -56,7 +56,7 @@ class GestureService : LifecycleService() {
         var previewListener: ((Int, Int, FloatArray?, String) -> Unit)? = null
         /** Flicks mode, while a preview is showing, ~10 times a second: speed, threshold, cooldown left/total (ms), last flick and when. */
         var meterListener: ((Float, Float, Long, Long, String?, Long) -> Unit)? = null
-        fun flickCooldownMs(c: Context) = c.getSharedPreferences("settings", MODE_PRIVATE).getLong("flickCooldownMs", 1000)
+        fun flickCooldownMs(c: Context) = c.getSharedPreferences("settings", MODE_PRIVATE).getLong("flickCooldownMs", 600) // a finger snap repeats about once a second; 1.0 s swallowed every other one
         /** Saved, and applied to a running engine straight away. */
         fun setFlickCooldownMs(c: Context, ms: Long) {
             c.getSharedPreferences("settings", MODE_PRIVATE).edit().putLong("flickCooldownMs", ms).apply()

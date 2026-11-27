@@ -49,7 +49,7 @@ Pick **Flicks** in Settings. The modes don't overlap: you use one or the other. 
 
 - For videos, the fingers decide the action, not the direction, so either direction works.
 - A flick is the fingertip moving at least 4 palm-lengths a second (and at least 0.6 of a palm), so it works at any distance from the camera.
-- After each flick, every flick is ignored for a while: 1.0 s by default, adjustable from 0.3 to 2.0 s in Settings.
+- After each flick, every flick is ignored for a while: 0.6 s by default, adjustable from 0.3 to 2.0 s in Settings.
 - Bringing your finger back doesn't count as another flick until the finger has rested for about 0.15 s.
 - Signs that flicks already cover (index up, peace, thumb left, pinky) are off in this mode. Thumbs up, three, four and the palm-hold pause still work.
 - On the Camera tab, flicks show an arrow, "Would do: …", your fingertip speed against the threshold, and the wait left before the next flick counts.

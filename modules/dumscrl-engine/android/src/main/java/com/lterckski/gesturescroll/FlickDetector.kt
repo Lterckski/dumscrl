@@ -12,7 +12,7 @@ import kotlin.math.hypot
  * larger x. Speeds are in palms per second, so distance from the camera doesn't matter.
  */
 class FlickDetector(
-    @Volatile var cooldownMs: Long = 1000,
+    @Volatile var cooldownMs: Long = 600,
     val minSpeed: Float = 4f,
     private val minTravelPalms: Float = 0.6f,
     private val windowMs: Long = 200,

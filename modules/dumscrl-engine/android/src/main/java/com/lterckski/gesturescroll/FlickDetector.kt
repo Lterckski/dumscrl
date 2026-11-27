@@ -20,8 +20,10 @@ class FlickDetector(
     private val stillSpeed: Float = 1.5f, // over ~0.1 s: landmark jitter frame to frame alone is ~1 palm/s
     private val stillMs: Long = 150,
     private val gapMs: Long = 300,
+    private val poseMs: Long = 400,
+    private val minPoseFrames: Int = 3,
 ) {
-    private class Sample(val t: Long, val x: Float, val y: Float, val fingers: Int)
+    private class Sample(val t: Long, val x: Float, val y: Float, val fingers: Int?)
 
     /** Fingertip speed over the last ~0.2 s, palms per second; for the practice readout. */
     @Volatile var speed = 0f
@@ -32,6 +34,7 @@ class FlickDetector(
         private set
 
     private val samples = ArrayDeque<Sample>()
+    private val poses = ArrayDeque<Pair<Long, Int>>()
     /** For the tuning log: whether the opposite of the last flick would count now. */
     val reverseReady get() = reverseArmed
     private var lastSeenAt = -1L
@@ -41,11 +44,13 @@ class FlickDetector(
 
     /**
      * fingers: 1 = index up, 2 = index and middle up (the rest curled, thumb ignored), null = neither.
-     * Other frames are skipped (a fast flick can blur one).
+     * Every frame counts for speed: mid-flick the fingers often blur or curl and read as a fist. Which flick it is
+     * comes from the pointing frames of the last ~0.4 s.
      */
     fun feed(t: Long, x: Float, y: Float, palm: Float, fingers: Int?): Gesture? {
-        if (fingers == null) return null
-        if (t - lastSeenAt > gapMs) { samples.clear(); stillSince = -1 }
+        if (t - lastSeenAt > gapMs) { samples.clear(); poses.clear(); stillSince = -1 }
+        if (fingers != null) poses.addLast(t to fingers)
+        while (poses.isNotEmpty() && t - poses.first().first > poseMs) poses.removeFirst()
         lastSeenAt = t
         val nx = x / palm; val ny = y / palm
         samples.firstOrNull { t - it.t <= 100 }?.let { prev ->
@@ -66,8 +71,8 @@ class FlickDetector(
         // The way the finger moved; bringing it back is the opposite move and only counts after a rest.
         val move = if (abs(dy) >= abs(dx)) (if (dy < 0) UP else DOWN) else (if (dx > 0) LEFT else RIGHT)
         if (!reverseArmed && move == opposite(lastMove)) return null
-        // Most frames in the flick decide index vs index + middle; one blurred frame doesn't.
-        val two = samples.count { it.fingers == 2 } * 2 > samples.size
+        if (poses.size < minPoseFrames) return null // no pointing hand just now: a fist or open hand moving
+        val two = poses.count { it.second == 2 } * 2 > poses.size
         val g = when (move) {
             UP, DOWN -> if (two) Gesture.SWIPE_DOWN else Gesture.SWIPE_UP
             else -> if (two) return null else if (move == LEFT) Gesture.PHOTO_NEXT else Gesture.PHOTO_PREV

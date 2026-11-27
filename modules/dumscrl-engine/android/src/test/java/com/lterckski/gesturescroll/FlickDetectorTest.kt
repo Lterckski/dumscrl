@@ -35,6 +35,7 @@ class FlickDetectorTest {
     @Test fun oneBlurredFrameDoesNotChangeWhichFingers() {
         move(300, fingers = 2)
         repeat(5) { move(33, dyPalms = -0.3f, fingers = if (it == 2) 1 else 2) }
+        move(100, fingers = 2)
         assertEquals(listOf(Gesture.SWIPE_DOWN), out)
     }
 
@@ -92,5 +93,15 @@ class FlickDetectorTest {
     @Test fun speedReadout() {
         move(300); assertTrue(d.speed < 1f)
         move(132, dyPalms = -2f); assertTrue(d.speed > d.minSpeed)
+    }
+
+    @Test fun flickStillCountsWhenTheFingersBlurIntoAFistMidway() {
+        move(300, fingers = 2); move(150, dyPalms = 1.5f, fingers = null); move(300, fingers = 2)
+        assertEquals(listOf(Gesture.SWIPE_DOWN), out)
+    }
+
+    @Test fun movingFistLongAfterPointingIsNotAFlick() {
+        move(300); move(600, fingers = null); move(150, dyPalms = -1.5f, fingers = null)
+        assertEquals(emptyList<Gesture>(), out)
     }
 }

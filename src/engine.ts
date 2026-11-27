@@ -64,7 +64,7 @@ export function useEngine() {
     setState((s) => ({ ...s, paused }));
   }, []);
 
-  return { state, start, stop, setMode, setPaused, openPhoneControl: Engine.openAccessibilitySettings };
+  return { state, start, stop, setMode, setPaused, openPhoneControl: () => Engine.openAccessibilitySettings() } // not passed straight to onPress: the press event would be an extra argument;
 }
 
 export type EngineApi = ReturnType<typeof useEngine>;

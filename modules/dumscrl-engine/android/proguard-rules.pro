@@ -5,3 +5,5 @@
 # MediaPipe logs through Flogger, which finds its caller by class name on the stack; renamed classes crash Graph's init.
 -keep class com.google.common.flogger.** { *; }
 -dontwarn com.google.common.flogger.**
+# Expo builds its errors (e.g. a wrong argument count) by reflection; stripped, a bad call crashes instead of throwing in JS.
+-keep class expo.modules.kotlin.exception.** { *; }

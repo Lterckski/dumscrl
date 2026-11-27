@@ -50,7 +50,7 @@ export function Settings({ engine }: { engine: EngineApi }) {
               step={100}
               value={cooldown}
               onValueChange={setCooldown}
-              onSlidingComplete={Engine.setFlickCooldown}
+              onSlidingComplete={(v) => Engine.setFlickCooldown(Math.round(v))}
               minimumTrackTintColor={c.accent}
               maximumTrackTintColor={c.separator}
               thumbTintColor={c.accent}
